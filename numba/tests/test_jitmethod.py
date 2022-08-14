@@ -10,7 +10,7 @@ from numba.tests.support import override_config
 
 class TestJITMethod(unittest.TestCase):
     def test_bound_jit_method_with_loop_lift(self):
-        class Something(object):
+        class Something:
             def __init__(self, x0):
                 self.x0 = x0
 
@@ -26,7 +26,7 @@ class TestJITMethod(unittest.TestCase):
 
         something = Something(3)
         np.testing.assert_array_equal(something.method(5),
-            np.array([15, 15, 15, 15, 15], dtype=np.float32))
+                                      np.array([15, 15, 15, 15, 15], dtype=np.float32))
 
         # Check that loop lifting in nopython mode was successful
         [cres] = something.method.overloads.values()
@@ -35,7 +35,7 @@ class TestJITMethod(unittest.TestCase):
         self.assertTrue(loopcres.fndesc.native)
 
     def test_unbound_jit_method(self):
-        class Something(object):
+        class Something:
             def __init__(self, x0):
                 self.x0 = x0
 
@@ -44,7 +44,7 @@ class TestJITMethod(unittest.TestCase):
                 return self.x0
 
         something = Something(3)
-        self.assertEquals(Something.method(something), 3)
+        self.assertEqual(Something.method(something), 3)
 
 
 class TestDisabledJIT(unittest.TestCase):
@@ -67,6 +67,7 @@ class TestDisabledJIT(unittest.TestCase):
         self.assertEqual(jitted, method)
         self.assertEqual(10, method(10))
         self.assertEqual(10, jitted(10))
+
 
 if __name__ == '__main__':
     unittest.main()

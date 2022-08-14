@@ -90,7 +90,7 @@ def get_slice_length(builder, slicestruct):
     # Nominal case
     pos_dividend = builder.sub(delta, one)
     neg_dividend = builder.add(delta, one)
-    dividend  = builder.select(is_step_negative, neg_dividend, pos_dividend)
+    dividend = builder.select(is_step_negative, neg_dividend, pos_dividend)
     nominal_length = builder.add(one, builder.sdiv(dividend, step))
 
     # Catch zero length
@@ -126,6 +126,7 @@ def fix_stride(builder, slice, stride):
     """
     return builder.mul(slice.step, stride)
 
+
 def guard_invalid_slice(context, builder, typ, slicestruct):
     """
     Guard against *slicestruct* having a zero step (and raise ValueError).
@@ -156,7 +157,7 @@ def slice_constructor_impl(context, builder, sig, args):
         default_stop_pos,
         default_stop_neg,
         default_step,
-    ) = [context.get_constant(types.intp, x) for x in get_defaults(context)]
+    ) = (context.get_constant(types.intp, x) for x in get_defaults(context))
 
     slice_args = [None] * 3
 
@@ -201,10 +202,12 @@ def slice_start_impl(context, builder, typ, value):
     sli = context.make_helper(builder, typ, value)
     return sli.start
 
+
 @lower_getattr(types.SliceType, "stop")
 def slice_stop_impl(context, builder, typ, value):
     sli = context.make_helper(builder, typ, value)
     return sli.stop
+
 
 @lower_getattr(types.SliceType, "step")
 def slice_step_impl(context, builder, typ, value):
@@ -250,7 +253,7 @@ def make_slice_from_constant(context, builder, ty, pyval):
         default_stop_pos,
         default_stop_neg,
         default_step,
-    ) = [context.get_constant(types.intp, x) for x in get_defaults(context)]
+    ) = (context.get_constant(types.intp, x) for x in get_defaults(context))
 
     step = pyval.step
     if step is None:

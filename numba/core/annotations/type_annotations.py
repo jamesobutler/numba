@@ -42,7 +42,7 @@ class SourceLines(Mapping):
         return bool(self.lines)
 
 
-class TypeAnnotation(object):
+class TypeAnnotation:
 
     # func_data dict stores annotation data for all functions that are
     # compiled. We store the data in the TypeAnnotation class since a new
@@ -89,7 +89,7 @@ class TypeAnnotation(object):
                         atype = 'XXX Lifted Loop XXX'
                         found_lifted_loop = False
                     elif (isinstance(inst.value, ir.Expr) and
-                            inst.value.op ==  'call'):
+                            inst.value.op == 'call'):
                         atype = self.calltypes[inst.value]
                     elif (isinstance(inst.value, ir.Const) and
                             isinstance(inst.value.value, numba.core.dispatcher.LiftedLoop)):
@@ -99,10 +99,11 @@ class TypeAnnotation(object):
                         # TODO: fix parfor lowering so that typemap is valid.
                         atype = self.typemap.get(inst.target.name, "<missing>")
 
-                    aline = "%s = %s  :: %s" % (inst.target, inst.value, atype)
+                    aline = "{} = {}  :: {}".format(
+                        inst.target, inst.value, atype)
                 elif isinstance(inst, ir.SetItem):
                     atype = self.calltypes[inst]
-                    aline = "%s  :: %s" % (inst, atype)
+                    aline = f"{inst}  :: {atype}"
                 else:
                     aline = "%s" % inst
                 groupedinst[lineno].append("  %s" % aline)
@@ -125,7 +126,7 @@ class TypeAnnotation(object):
                     ind = _getindent(srcline)
                     print("%s# --- LINE %d --- " % (ind, num), file=io)
                     for inst in groupedinst[num]:
-                        print('%s# %s' % (ind, inst), file=io)
+                        print(f'{ind}# {inst}', file=io)
                     print(file=io)
                     print(srcline, file=io)
                     print(file=io)
@@ -142,7 +143,7 @@ class TypeAnnotation(object):
                 print("# Source code unavailable", file=io)
                 for num in groupedinst:
                     for inst in groupedinst[num]:
-                        print('%s' % (inst,), file=io)
+                        print(f'{inst}', file=io)
                     print(file=io)
 
             return io.getvalue()
@@ -169,8 +170,6 @@ class TypeAnnotation(object):
                     idents[line] = ['&nbsp;' * amount for amount in ir_id]
                 this_func[key] = idents
 
-
-
         try:
             from jinja2 import Template
         except ImportError:
@@ -178,7 +177,7 @@ class TypeAnnotation(object):
 
         root = os.path.join(os.path.dirname(__file__))
         template_filename = os.path.join(root, 'template.html')
-        with open(template_filename, 'r') as template:
+        with open(template_filename) as template:
             html = template.read()
 
         template = Template(html)
@@ -226,7 +225,8 @@ class TypeAnnotation(object):
                         # as an object line instead. Lifted loop start lines should
                         # only be marked as lifted loop lines if the lifted loop
                         # was successfully compiled in nopython mode.
-                        func_data['python_tags'][self.lifted_from[0]] = 'object_tag'
+                        func_data['python_tags'][self.lifted_from[0]
+                                                 ] = 'object_tag'
 
             # We're done with this lifted loop, so decrement lifted loop counter.
             # When lifted loop counter hits zero, that means we're ready to write
@@ -252,7 +252,8 @@ class TypeAnnotation(object):
             func_data['ir_indent'] = {}
 
             for num in line_nums:
-                func_data['python_lines'].append((num, python_source[num].strip()))
+                func_data['python_lines'].append(
+                    (num, python_source[num].strip()))
                 indent_len = len(_getindent(python_source[num]))
                 func_data['python_indent'][num] = indent_len
                 func_data['python_tags'][num] = ''
@@ -266,7 +267,6 @@ class TypeAnnotation(object):
                     elif line.strip().endswith('pyobject'):
                         func_data['python_tags'][num] = 'object_tag'
         return self.func_data
-
 
     def __str__(self):
         return self.annotate()

@@ -29,7 +29,7 @@ class _CFuncCompiler(_FunctionCompiler):
         return flags
 
 
-class CFunc(object):
+class CFunc:
     """
     A compiled C callback, as created by the @cfunc decorator.
     """
@@ -128,7 +128,7 @@ class CFunc(object):
         return self._cache_hits
 
     def __repr__(self):
-        return "<Numba C callback %r>" % (self.__qualname__,)
+        return f"<Numba C callback {self.__qualname__!r}>"
 
     def __call__(self, *args, **kwargs):
         return self._pyfunc(*args, **kwargs)

@@ -3,7 +3,7 @@ import weakref
 from numba.core import types
 
 
-class DataModelManager(object):
+class DataModelManager:
     """Manages mapping of FE types to their corresponding data model
     """
 
@@ -44,4 +44,3 @@ class DataModelManager(object):
         dmm = DataModelManager()
         dmm._handlers = self._handlers.copy()
         return dmm
-

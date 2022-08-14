@@ -10,7 +10,7 @@ from collections import defaultdict
 from numba.core import errors
 
 
-class _OverloadWrapper(object):
+class _OverloadWrapper:
     """This class does all the work of assembling and registering wrapped split
     implementations.
     """
@@ -217,19 +217,20 @@ class _OverloadWrapper(object):
             # This is to name the function with something vaguely identifiable
             name = ''.join([x if x not in {'>','<',' ','-','.'} else '_'
                             for x in name])
-            gen = textwrap.dedent(("""
+            gen = textwrap.dedent("""
             def jit_wrapper_{}({}):
                 return intrin({})
-            """)).format(name, call_str_specific, call_str)
+            """).format(name, call_str_specific, call_str)
             l = {}
             g = {'intrin': intrin}
             exec(gen, g, l)
-            return l['jit_wrapper_{}'.format(name)]
+            return l[f'jit_wrapper_{name}']
 
 
 class _Gluer:
     """This is a helper class to make sure that each concrete overload has only
     one wrapper as the code relies on the wrapper being a singleton."""
+
     def __init__(self):
         self._registered = dict()
         self._lock = RLock()

@@ -15,16 +15,20 @@ import unittest
 def slice_passing(sl):
     return sl.start, sl.stop, sl.step
 
+
 def slice_constructor(*args):
     sl = slice(*args)
     return sl.start, sl.stop, sl.step
+
 
 def slice_construct_and_use(args, l):
     sl = slice(*args)
     return l[sl]
 
+
 def slice_indices(s, *indargs):
     return s.indices(*indargs)
+
 
 class TestSlices(MemoryLeakMixin, TestCase):
 
@@ -115,7 +119,7 @@ class TestSlices(MemoryLeakMixin, TestCase):
                 # Catch cases of 0, or more than 3 arguments.
                 # This becomes a typing error in numba
                 n_args = len(args)
-                self.assertRegexpMatches(
+                self.assertRegex(
                     str(py_type_e),
                     r"slice expected at (most|least) (3|1) arguments?, got {}"
                     .format(n_args)
@@ -174,8 +178,8 @@ class TestSlices(MemoryLeakMixin, TestCase):
         with self.assertRaises(TypingError) as e:
             cslice_indices(slice(None), 1, 2, 3)
         self.assertIn(
-             "indices() takes exactly one argument (3 given)",
-             str(e.exception)
+            "indices() takes exactly one argument (3 given)",
+            str(e.exception)
         )
 
         with self.assertRaises(TypingError) as e:
@@ -227,11 +231,11 @@ class TestSlices(MemoryLeakMixin, TestCase):
         for sl in slices:
             self.assertEqual(sl, f(sl))
 
-
     def test_literal_slice_freevar(self):
         # Tests passing a literal slice as a freevar
         # in a closure.
         z = slice(1, 2, 3)
+
         @njit
         def foo():
             return z
@@ -248,7 +252,7 @@ class TestSlices(MemoryLeakMixin, TestCase):
 
         maxval = int(2**63)
         with self.assertRaises(ValueError) as e:
-            foo(slice(None, None, -maxval-1))
+            foo(slice(None, None, -maxval - 1))
         self.assertIn(
             "Int value is too large",
             str(e.exception)

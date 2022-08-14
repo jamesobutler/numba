@@ -44,6 +44,7 @@ class FakeOverload:
     '''
     Used only to provide the max_cooperative_grid_blocks method
     '''
+
     def max_cooperative_grid_blocks(self, blockdim):
         # We can only run one block in a cooperative grid because we have no
         # mechanism for synchronization between different blocks
@@ -57,7 +58,7 @@ class FakeOverloadDict(dict):
         return FakeOverload()
 
 
-class FakeCUDAKernel(object):
+class FakeCUDAKernel:
     '''
     Wraps a @cuda.jit-ed function.
     '''
@@ -160,6 +161,7 @@ class BlockThread(threading.Thread):
     '''
     Manages the execution of a function for a single CUDA thread.
     '''
+
     def __init__(self, f, manager, blockIdx, threadIdx, debug):
         if debug:
             def debug_wrapper(*args, **kwargs):
@@ -169,7 +171,7 @@ class BlockThread(threading.Thread):
         else:
             target = f
 
-        super(BlockThread, self).__init__(target=target)
+        super().__init__(target=target)
         self.syncthreads_event = threading.Event()
         self.syncthreads_blocked = False
         self._manager = manager
@@ -186,14 +188,14 @@ class BlockThread(threading.Thread):
 
     def run(self):
         try:
-            super(BlockThread, self).run()
+            super().run()
         except Exception as e:
             tid = 'tid=%s' % list(self.threadIdx)
             ctaid = 'ctaid=%s' % list(self.blockIdx)
             if str(e) == '':
-                msg = '%s %s' % (tid, ctaid)
+                msg = f'{tid} {ctaid}'
             else:
-                msg = '%s %s: %s' % (tid, ctaid, e)
+                msg = f'{tid} {ctaid}: {e}'
             tb = sys.exc_info()[2]
             # Using `with_traceback` here would cause it to be mutated by
             # future raise statements, which may or may not matter.
@@ -236,10 +238,10 @@ class BlockThread(threading.Thread):
         return 1 if test else 0
 
     def __str__(self):
-        return 'Thread <<<%s, %s>>>' % (self.blockIdx, self.threadIdx)
+        return f'Thread <<<{self.blockIdx}, {self.threadIdx}>>>'
 
 
-class BlockManager(object):
+class BlockManager:
     '''
     Manages the execution of a thread block.
 
@@ -257,6 +259,7 @@ class BlockManager(object):
     The polling continues until no threads are alive, when execution is
     complete.
     '''
+
     def __init__(self, f, grid_dim, block_dim, debug):
         self._grid_dim = grid_dim
         self._block_dim = block_dim
@@ -299,7 +302,7 @@ class BlockManager(object):
                     t.syncthreads_blocked = False
                     t.syncthreads_event.set()
                 blockedthreads = set()
-            livethreads = set([ t for t in livethreads if t.is_alive() ])
+            livethreads = { t for t in livethreads if t.is_alive() }
         # Final check for exceptions in case any were set prior to thread
         # finishing, before we could check it
         for t in threads:

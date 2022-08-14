@@ -126,7 +126,7 @@ skip_ppc64le_issue6465 = unittest.skipIf(platform.machine() == 'ppc64le',
 _uname = platform.uname()
 IS_OSX_ARM64 = _uname.system == 'Darwin' and _uname.machine == 'arm64'
 skip_m1_fenv_errors = unittest.skipIf(IS_OSX_ARM64,
-    "fenv.h-like functionality unreliable on OSX arm64")
+                                      "fenv.h-like functionality unreliable on OSX arm64")
 
 try:
     import scipy.linalg.cython_lapack
@@ -172,7 +172,7 @@ def ignore_internal_warnings():
                             module=r'numba\.np\.ufunc\.parallel.*')
 
 
-class CompilationCache(object):
+class CompilationCache:
     """
     A cache of compilation results for various signatures and flags.
     This can make tests significantly faster (or less slow).
@@ -270,7 +270,6 @@ class TestCase(unittest.TestCase):
         self.assertEqual(total_mi_alloc, total_mi_free,
                          "number of meminfo allocs != number of meminfo frees")
 
-
     _bool_types = (bool, np.bool_)
     _exact_typesets = [_bool_types, (int,), (str,), (np.integer,),
                        (bytes, np.bytes_)]
@@ -316,7 +315,7 @@ class TestCase(unittest.TestCase):
         # Under 64-bit Windows, Numpy may return either int32 or int64
         # arrays depending on the function.
         if (sys.platform == 'win32' and sys.maxsize > 2**32 and
-            dtype == np.dtype('int32')):
+                dtype == np.dtype('int32')):
             return np.dtype('int64')
         else:
             return dtype
@@ -380,7 +379,7 @@ class TestCase(unittest.TestCase):
         """
         try:
             self._assertPreciseEqual(first, second, prec, ulps, msg,
-                ignore_sign_on_zero, abs_tol)
+                                     ignore_sign_on_zero, abs_tol)
         except AssertionError as exc:
             failure_msg = str(exc)
             # Fall off of the 'except' scope to avoid Python 3 exception
@@ -388,7 +387,8 @@ class TestCase(unittest.TestCase):
         else:
             return
         # Decorate the failure message with more information
-        self.fail("when comparing %s and %s: %s" % (first, second, failure_msg))
+        self.fail("when comparing {} and {}: {}".format(
+            first, second, failure_msg))
 
     def _assertPreciseEqual(self, first, second, prec='exact', ulps=1,
                             msg=None, ignore_sign_on_zero=False,
@@ -397,7 +397,7 @@ class TestCase(unittest.TestCase):
 
         def _assertNumberEqual(first, second, delta=None):
             if (delta is None or first == second == 0.0
-                or math.isinf(first) or math.isinf(second)):
+                    or math.isinf(first) or math.isinf(second)):
                 self.assertEqual(first, second, msg=msg)
                 # For signed zeros
                 if not ignore_sign_on_zero:
@@ -415,10 +415,10 @@ class TestCase(unittest.TestCase):
         first_family = self._detect_family(first)
         second_family = self._detect_family(second)
 
-        assertion_message = "Type Family mismatch. (%s != %s)" % (first_family,
-            second_family)
+        assertion_message = "Type Family mismatch. ({} != {})".format(first_family,
+                                                                      second_family)
         if msg:
-            assertion_message += ': %s' % (msg,)
+            assertion_message += f': {msg}'
         self.assertEqual(first_family, second_family, msg=assertion_message)
 
         # We now know they are in the same comparison family
@@ -436,7 +436,7 @@ class TestCase(unittest.TestCase):
                              "different mutability")
             # itemsize is already checked by the dtype test above
             self.assertEqual(self._fix_strides(first),
-                self._fix_strides(second), "different strides")
+                             self._fix_strides(second), "different strides")
             if first.dtype != dtype:
                 first = first.astype(dtype)
             if second.dtype != dtype:
@@ -482,11 +482,11 @@ class TestCase(unittest.TestCase):
 
         # Mixing bools and non-bools should always fail
         if (isinstance(first, self._bool_types) !=
-            isinstance(second, self._bool_types)):
+                isinstance(second, self._bool_types)):
             assertion_message = ("Mismatching return types (%s vs. %s)"
                                  % (first.__class__, second.__class__))
             if msg:
-                assertion_message += ': %s' % (msg,)
+                assertion_message += f': {msg}'
             self.fail(assertion_message)
 
         try:
@@ -505,7 +505,7 @@ class TestCase(unittest.TestCase):
                 rtol = abs_tol
             else:
                 raise ValueError("abs_tol is not \"eps\" or a float, found %s"
-                    % abs_tol)
+                                 % abs_tol)
             if abs(first - second) < rtol:
                 return
 
@@ -517,7 +517,7 @@ class TestCase(unittest.TestCase):
             elif prec == 'double':
                 bits = 53
             else:
-                raise ValueError("unsupported precision %r" % (prec,))
+                raise ValueError(f"unsupported precision {prec!r}")
             k = 2 ** (ulps - bits - 1)
             delta = k * (abs(first) + abs(second))
         else:
@@ -577,9 +577,8 @@ class TestCase(unittest.TestCase):
         env_copy['SUBPROC_TEST'] = '1'
         envvars = pytypes.MappingProxyType({} if envvars is None else envvars)
         env_copy.update(envvars)
-        status = subprocess.run(cmd, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, timeout=timeout,
-                                env=env_copy, universal_newlines=True)
+        status = subprocess.run(cmd, capture_output=True, timeout=timeout,
+                                env=env_copy, text=True)
         streams = (f'\ncaptured stdout: {status.stdout}\n'
                    f'captured stderr: {status.stderr}')
         self.assertEqual(status.returncode, 0, streams)
@@ -614,7 +613,7 @@ class TestCase(unittest.TestCase):
             return wrapper
 
 
-class SerialMixin(object):
+class SerialMixin:
     """Mixin to mark test for serial execution.
     """
     _numba_parallel_test_ = False
@@ -670,6 +669,7 @@ def compile_function(name, code, globs):
     eval(co, globs, ns)
     return ns[name]
 
+
 def tweak_code(func, codestring=None, consts=None):
     """
     Tweak the code object of the given function by replacing its
@@ -706,17 +706,19 @@ else:
     # Mix the UID into the directory name to allow different users to
     # run the test suite without permission errors (issue #1586)
     _trashcan_dir = os.path.join(tempfile.gettempdir(),
-                                 "%s.%s" % (_trashcan_dir, os.getuid()))
+                                 f"{_trashcan_dir}.{os.getuid()}")
 
 # Stale temporary directories are deleted after they are older than this value.
 # The test suite probably won't ever take longer than this...
 _trashcan_timeout = 24 * 3600  # 1 day
+
 
 def _create_trashcan_dir():
     try:
         os.mkdir(_trashcan_dir)
     except FileExistsError:
         pass
+
 
 def _purge_trashcan_dir():
     freshness_threshold = time.time() - _trashcan_timeout
@@ -731,10 +733,12 @@ def _purge_trashcan_dir():
             # remove the same entry at once, ignore.
             pass
 
+
 def _create_trashcan_subdir(prefix):
     _purge_trashcan_dir()
     path = tempfile.mkdtemp(prefix=prefix + '-', dir=_trashcan_dir)
     return path
+
 
 def temp_directory(prefix):
     """
@@ -776,6 +780,7 @@ def captured_output(stream_name):
     finally:
         setattr(sys, stream_name, orig_stdout)
 
+
 def captured_stdout():
     """Capture the output of sys.stdout:
 
@@ -784,6 +789,7 @@ def captured_stdout():
        self.assertEqual(stdout.getvalue(), "hello\n")
     """
     return captured_output("stdout")
+
 
 def captured_stderr():
     """Capture the output of sys.stderr:
@@ -802,7 +808,7 @@ def capture_cache_log():
             yield out
 
 
-class EnableNRTStatsMixin(object):
+class EnableNRTStatsMixin:
     """Mixin to enable the NRT statistics counters."""
 
     def setUp(self):
@@ -812,7 +818,7 @@ class EnableNRTStatsMixin(object):
         _nrt.memsys_disable_stats()
 
 
-class MemoryLeak(object):
+class MemoryLeak:
 
     __enable_leak_check = True
 
@@ -843,13 +849,13 @@ class MemoryLeak(object):
 class MemoryLeakMixin(EnableNRTStatsMixin, MemoryLeak):
 
     def setUp(self):
-        super(MemoryLeakMixin, self).setUp()
+        super().setUp()
         self.memory_leak_setup()
 
     def tearDown(self):
         gc.collect()
         self.memory_leak_teardown()
-        super(MemoryLeakMixin, self).tearDown()
+        super().tearDown()
 
 
 @contextlib.contextmanager
@@ -864,6 +870,7 @@ def forbid_codegen():
     patchpoints = ['CPUCodeLibrary._finalize_final_module']
 
     old = {}
+
     def fail(*args, **kwargs):
         raise RuntimeError("codegen forbidden by test case")
     try:
@@ -902,7 +909,7 @@ def redirect_fd(fd):
     r, w = os.pipe()
     try:
         os.dup2(w, fd)
-        yield io.open(r, "r")
+        yield open(r)
     finally:
         libnumba._numba_flush_stdout()
         os.close(w)
@@ -989,7 +996,8 @@ def _remote_runner(fn, qout):
     qout.put(stderr.getvalue())
     sys.exit(exitcode)
 
-class CheckWarningsMixin(object):
+
+class CheckWarningsMixin:
     @contextlib.contextmanager
     def check_warnings(self, messages, category=RuntimeWarning):
         with warnings.catch_warnings(record=True) as catch:
@@ -1010,8 +1018,8 @@ def _format_jit_options(**jit_options):
     out = []
     for key, value in jit_options.items():
         if isinstance(value, str):
-            value = '"{}"'.format(value)
-        out.append('{}={}'.format(key, value))
+            value = f'"{value}"'
+        out.append(f'{key}={value}')
     return ', '.join(out)
 
 
@@ -1111,7 +1119,7 @@ def strace(work, syscalls, timeout=10):
                 os.kill(strace_pid, signal.SIGINT)
             else:
                 # it's not running, probably an issue, raise
-                problem="If this is SIGKILL, increase the timeout?"
+                problem = "If this is SIGKILL, increase the timeout?"
                 check_return(problem)
             # Make sure the return code is 0, SIGINT to detach is considered
             # a successful exit.
@@ -1183,7 +1191,7 @@ def print_azure_matrix():
     azure_pipe = os.path.join(base_path, '..', '..', 'azure-pipelines.yml')
     if not os.path.isfile(azure_pipe):
         self.skipTest("'azure-pipelines.yml' is not available")
-    with open(os.path.abspath(azure_pipe), 'rt') as f:
+    with open(os.path.abspath(azure_pipe)) as f:
         data = f.read()
     pipe_yml = yaml.load(data, Loader=Loader)
 
@@ -1193,14 +1201,14 @@ def print_azure_matrix():
     for tmplt in templates[:2]:
         matrix = tmplt['parameters']['matrix']
         for setup in matrix.values():
-            py2np_map[setup['NUMPY']][setup['PYTHON']]+=1
+            py2np_map[setup['NUMPY']][setup['PYTHON']] += 1
 
     # next look at the items in the windows only template
     winpath = ['..', '..', 'buildscripts', 'azure', 'azure-windows.yml']
     azure_windows = os.path.join(base_path, *winpath)
     if not os.path.isfile(azure_windows):
         self.skipTest("'azure-windows.yml' is not available")
-    with open(os.path.abspath(azure_windows), 'rt') as f:
+    with open(os.path.abspath(azure_windows)) as f:
         data = f.read()
     windows_yml = yaml.load(data, Loader=Loader)
 
@@ -1208,7 +1216,7 @@ def print_azure_matrix():
     # above, get its matrix.
     matrix = windows_yml['jobs'][0]['strategy']['matrix']
     for setup in matrix.values():
-        py2np_map[setup['NUMPY']][setup['PYTHON']]+=1
+        py2np_map[setup['NUMPY']][setup['PYTHON']] += 1
 
     print("NumPy | Python | Count")
     print("-----------------------")

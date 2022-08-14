@@ -15,20 +15,21 @@ from numba.np import numpy_support
 from .vector_types import vector_types
 
 
-class Dim3(object):
+class Dim3:
     '''
     Used to implement thread/block indices/dimensions
     '''
+
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
         self.z = z
 
     def __str__(self):
-        return '(%s, %s, %s)' % (self.x, self.y, self.z)
+        return f'({self.x}, {self.y}, {self.z})'
 
     def __repr__(self):
-        return 'Dim3(%s, %s, %s)' % (self.x, self.y, self.z)
+        return f'Dim3({self.x}, {self.y}, {self.z})'
 
     def __iter__(self):
         yield self.x
@@ -52,29 +53,32 @@ class FakeCUDACg:
     '''
     CUDA Cooperative Groups
     '''
+
     def this_grid(self):
         return GridGroup()
 
 
-class FakeCUDALocal(object):
+class FakeCUDALocal:
     '''
     CUDA Local arrays
     '''
+
     def array(self, shape, dtype):
         if isinstance(dtype, types.Type):
             dtype = numpy_support.as_dtype(dtype)
         return np.empty(shape, dtype)
 
 
-class FakeCUDAConst(object):
+class FakeCUDAConst:
     '''
     CUDA Const arrays
     '''
+
     def array_like(self, ary):
         return ary
 
 
-class FakeCUDAShared(object):
+class FakeCUDAShared:
     '''
     CUDA Shared arrays.
 
@@ -134,7 +138,7 @@ declock = threading.Lock()
 exchlock = threading.Lock()
 
 
-class FakeCUDAAtomic(object):
+class FakeCUDAAtomic:
     def add(self, array, index, val):
         with addlock:
             old = array[index]
@@ -222,7 +226,7 @@ class FakeCUDAAtomic(object):
             return loaded
 
 
-class FakeCUDAFp16(object):
+class FakeCUDAFp16:
     def hadd(self, a, b):
         return a + b
 
@@ -266,7 +270,7 @@ class FakeCUDAFp16(object):
         return min(a, b)
 
 
-class FakeCUDAModule(object):
+class FakeCUDAModule:
     '''
     An instance of this class will be injected into the __globals__ for an
     executing function in order to implement calls to cuda.*. This will fail to
@@ -370,10 +374,10 @@ class FakeCUDAModule(object):
         return a ** (1 / 3)
 
     def brev(self, val):
-        return int('{:032b}'.format(val)[::-1], 2)
+        return int(f'{val:032b}'[::-1], 2)
 
     def clz(self, val):
-        s = '{:032b}'.format(val)
+        s = f'{val:032b}'
         return len(s) - len(s.lstrip('0'))
 
     def ffs(self, val):
@@ -382,7 +386,7 @@ class FakeCUDAModule(object):
         # 2. Add 1, because the LSB is numbered 1 rather than 0, and so on.
         # 3. If we've counted 32 zeros (resulting in 33), there were no bits
         #    set so we need to return zero.
-        s = '{:032b}'.format(val)
+        s = f'{val:032b}'
         r = (len(s) - len(s.rstrip('0')) + 1) % 33
         return r
 
@@ -427,9 +431,9 @@ def swapped_cuda_module(fn, fake_cuda_module):
 
     fn_globs = fn.__globals__
     # get all globals that is the "cuda" module
-    orig = dict((k, v) for k, v in fn_globs.items() if v is cuda)
+    orig = {k: v for k, v in fn_globs.items() if v is cuda}
     # build replacement dict
-    repl = dict((k, fake_cuda_module) for k, v in orig.items())
+    repl = {k: fake_cuda_module for k, v in orig.items()}
     # replace
     fn_globs.update(repl)
     try:

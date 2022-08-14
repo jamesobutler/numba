@@ -4,10 +4,11 @@ import llvmlite.ir
 from numba.core import types, config, cgutils
 
 
-class _ArgManager(object):
+class _ArgManager:
     """
     A utility class to handle argument unboxing and cleanup
     """
+
     def __init__(self, context, builder, api, env_manager, endblk, nargs):
         self.context = context
         self.builder = builder
@@ -71,7 +72,7 @@ class _ArgManager(object):
             dtor()
 
 
-class _GilManager(object):
+class _GilManager:
     """
     A utility class to handle releasing the GIL and then re-acquiring it
     again.
@@ -88,7 +89,7 @@ class _GilManager(object):
         self.argman.emit_cleanup()
 
 
-class PyCallWrapper(object):
+class PyCallWrapper:
     def __init__(self, context, module, func, fndesc, env, call_helper,
                  release_gil):
         self.context = context
@@ -223,4 +224,4 @@ class PyCallWrapper(object):
 
     def debug_print(self, builder, msg):
         if config.DEBUG_JIT:
-            self.context.debug_print(builder, "DEBUGJIT: {0}".format(msg))
+            self.context.debug_print(builder, f"DEBUGJIT: {msg}")

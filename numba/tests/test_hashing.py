@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Test hashing of various supported types.
 """
@@ -222,7 +221,6 @@ class TestNumberHashing(BaseTest):
         self.check_hash_values([np.int32(-0x7ffffff6)])
         self.check_hash_values([np.int32(-0x7fffff9c)])
 
-
     @skip_unless_py10_or_later
     def test_py310_nan_hash(self):
         # On Python 3.10+ nan's hash to a value which is based on the pointer to
@@ -233,7 +231,7 @@ class TestNumberHashing(BaseTest):
         # Run 10 hashes, make sure that the "uniqueness" is sufficient that
         # there's more than one hash value. Not much more can be done!
         x = [float('nan') for i in range(10)]
-        out = set([self.cfunc(z) for z in x])
+        out = {self.cfunc(z) for z in x}
         self.assertGreater(len(out), 1)
 
 

@@ -45,7 +45,7 @@ class GeneratorDescriptor(FunctionDescriptor):
         return 'finalize_' + self.mangled_name
 
 
-class BaseGeneratorLower(object):
+class BaseGeneratorLower:
     """
     Base support class for lowering generators.
     """
@@ -133,7 +133,8 @@ class BaseGeneratorLower(object):
         yielded value).
         """
         lower.setup_function(self.gendesc)
-        lower.debug_print("# lower_next_func: {0}".format(self.gendesc.unique_name))
+        lower.debug_print("# lower_next_func: {}".format(
+            self.gendesc.unique_name))
         assert self.gendesc.argtypes[0] == self.gentype
         builder = lower.builder
         function = lower.function
@@ -203,7 +204,8 @@ class BaseGeneratorLower(object):
 
     def debug_print(self, builder, msg):
         if config.DEBUG_JIT:
-            self.context.debug_print(builder, "DEBUGJIT: {0}".format(msg))
+            self.context.debug_print(builder, f"DEBUGJIT: {msg}")
+
 
 class GeneratorLower(BaseGeneratorLower):
     """
@@ -233,6 +235,7 @@ class GeneratorLower(BaseGeneratorLower):
         self.debug_print(builder, "# generator: finalize end")
         builder.ret_void()
 
+
 class PyGeneratorLower(BaseGeneratorLower):
     """
     Support class for lowering object mode generators.
@@ -249,7 +252,7 @@ class PyGeneratorLower(BaseGeneratorLower):
             arg_types=(types.pyobject,) * self.func_ir.arg_count,
             state_types=(types.pyobject,) * len(self.geninfo.state_vars),
             has_finalizer=True,
-            )
+        )
 
     def box_generator_struct(self, lower, gen_struct):
         """
@@ -294,7 +297,7 @@ class PyGeneratorLower(BaseGeneratorLower):
         builder.ret_void()
 
 
-class LowerYield(object):
+class LowerYield:
     """
     Support class for lowering a particular yield point.
     """

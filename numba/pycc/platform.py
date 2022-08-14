@@ -27,6 +27,7 @@ def get_configs(arg):
 find_shared_ending = functools.partial(get_configs, 0)
 find_pyext_ending = functools.partial(get_configs, 1)
 
+
 @contextmanager
 def _gentmpfile(suffix):
     # windows locks the tempfile so use a tempdir + file, see
@@ -43,6 +44,7 @@ def _gentmpfile(suffix):
             pass
         else:
             os.rmdir(tmpdir)
+
 
 def _check_external_compiler():
     # see if the external compiler bound in numpy.distutil is present
@@ -63,16 +65,17 @@ def _check_external_compiler():
             return False
     return True
 
+
 # boolean on whether the externally provided compiler is present and
 # functioning correctly
 _external_compiler_ok = _check_external_compiler()
 
 
-class _DummyExtension(object):
+class _DummyExtension:
     libraries = []
 
 
-class Toolchain(object):
+class Toolchain:
 
     def __init__(self):
         if not _external_compiler_ok:
@@ -110,13 +113,13 @@ class Toolchain(object):
                 compilers = ['gcc_linux-32', 'gxx_linux-32']
             else:
                 compilers = ['gcc_linux-64', 'gxx_linux-64']
-            msg = "%s %s" % (basemsg, conda_msg % ' '.join(compilers))
+            msg = "{} {}".format(basemsg, conda_msg % ' '.join(compilers))
         elif plt.startswith('darwin'):
             compilers = ['clang_osx-64', 'clangxx_osx-64']
-            msg = "%s %s" % (basemsg, conda_msg % ' '.join(compilers))
+            msg = "{} {}".format(basemsg, conda_msg % ' '.join(compilers))
         elif plt.startswith('win32'):
             winmsg = "Cannot find suitable msvc."
-            msg = "%s %s" % (basemsg, winmsg)
+            msg = f"{basemsg} {winmsg}"
         else:
             msg = "Unknown platform %s" % plt
         raise RuntimeError(msg)

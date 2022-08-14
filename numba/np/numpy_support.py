@@ -135,7 +135,7 @@ def as_dtype(nbtype):
     if isinstance(nbtype, (types.NPDatetime, types.NPTimedelta)):
         letter = _as_dtype_letters[type(nbtype)]
         if nbtype.unit:
-            return np.dtype('%s[%s]' % (letter, nbtype.unit))
+            return np.dtype(f'{letter}[{nbtype.unit}]')
         else:
             return np.dtype(letter)
     if isinstance(nbtype, (types.CharSeq, types.UnicodeCharSeq)):
@@ -269,7 +269,7 @@ def resolve_output_type(context, inputs, formal_output):
             # (we can't define __array_wrap__ explicitly for types.Buffer,
             #  as that would be inherited by most array-compatible objects)
             return formal_output
-        raise errors.TypingError("__array_wrap__ failed for %s" % (args,))
+        raise errors.TypingError(f"__array_wrap__ failed for {args}")
     return sig.return_type
 
 
@@ -368,7 +368,7 @@ def ufunc_find_matching_loop(ufunc, arg_types):
     # Separate logical input from explicit output arguments
     input_types = arg_types[:ufunc.nin]
     output_types = arg_types[ufunc.nin:]
-    assert(len(input_types) == ufunc.nin)
+    assert (len(input_types) == ufunc.nin)
 
     try:
         np_input_types = [as_dtype(x) for x in input_types]
@@ -620,7 +620,7 @@ def carray(ptr, shape, dtype=None):
         dtype = ptr_dtype
         p = ctypes.cast(ptr, ctypes.c_void_p)
     else:
-        raise TypeError("expected a ctypes pointer, got %r" % (ptr,))
+        raise TypeError(f"expected a ctypes pointer, got {ptr!r}")
 
     nbytes = dtype.itemsize * np.product(shape, dtype=np.intp)
     return _get_array_from_ptr(p, nbytes, dtype).reshape(shape)
@@ -717,4 +717,4 @@ def type_can_asarray(arr):
 def check_is_integer(v, name):
     """Raises TypingError if the value is not an integer."""
     if not isinstance(v, (int, types.Integer)):
-        raise TypingError('{} must be an integer'.format(name))
+        raise TypingError(f'{name} must be an integer')

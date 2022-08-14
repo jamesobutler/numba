@@ -7,7 +7,7 @@ from numba.core.errors import UnsupportedError
 from numba.core.ir import Loc
 
 
-class DataFlowAnalysis(object):
+class DataFlowAnalysis:
     """
     Perform stack2reg
 
@@ -40,7 +40,8 @@ class DataFlowAnalysis(object):
             ib = self.infos[ib.offset]
             incoming_blocks.append(ib)
             if (ib.offset, blk.offset) in self.edge_process:
-                edge_callbacks.append(self.edge_process[(ib.offset, blk.offset)])
+                edge_callbacks.append(
+                    self.edge_process[(ib.offset, blk.offset)])
 
             # Compute stack offset at block entry
             # The stack effect of our predecessors should be known
@@ -88,7 +89,7 @@ class DataFlowAnalysis(object):
 
     def handle_unknown_opcode(self, info, inst):
         raise UnsupportedError(
-            "Use of unknown opcode '{}'".format(inst.opname),
+            f"Use of unknown opcode '{inst.opname}'",
             loc=Loc(filename=self.bytecode.func_id.filename,
                     line=inst.lineno)
         )
@@ -182,7 +183,7 @@ class DataFlowAnalysis(object):
             raise UnsupportedError(
                 msg,
                 loc=Loc(filename=self.bytecode.func_id.filename,
-                line=inst.lineno)
+                        line=inst.lineno)
             )
         value = info.pop()
         strvar = info.make_temp()
@@ -227,7 +228,8 @@ class DataFlowAnalysis(object):
         target = info.peek(index)
         appendvar = info.make_temp()
         res = info.make_temp()
-        info.append(inst, target=target, value=value, appendvar=appendvar, res=res)
+        info.append(inst, target=target, value=value,
+                    appendvar=appendvar, res=res)
 
     def op_BUILD_MAP(self, info, inst):
         dct = info.make_temp()
@@ -248,7 +250,7 @@ class DataFlowAnalysis(object):
         setitemvar = info.make_temp()
         res = info.make_temp()
         info.append(inst, target=target, key=key, value=value,
-                     setitemvar=setitemvar, res=res)
+                    setitemvar=setitemvar, res=res)
 
     def op_BUILD_SET(self, info, inst):
         count = inst.arg
@@ -340,13 +342,16 @@ class DataFlowAnalysis(object):
         pair = info.make_temp()
         indval = info.make_temp()
         pred = info.make_temp()
-        info.append(inst, iterator=iterator, pair=pair, indval=indval, pred=pred)
+        info.append(inst, iterator=iterator, pair=pair,
+                    indval=indval, pred=pred)
         info.push(indval)
         # Setup for stack POP (twice) at loop exit (before processing instruction at jump target)
+
         def pop_info(info):
             info.pop()
             info.pop()
-        self.edge_process[(info.block.offset, inst.get_jump_target())] = pop_info
+        self.edge_process[(info.block.offset,
+                           inst.get_jump_target())] = pop_info
 
     def op_CALL_FUNCTION(self, info, inst):
         narg = inst.arg
@@ -779,21 +784,21 @@ class DataFlowAnalysis(object):
         pass
 
 
-class LoopBlock(object):
+class LoopBlock:
     __slots__ = ('stack_offset',)
 
     def __init__(self):
         self.stack_offset = None
 
 
-class WithBlock(object):
+class WithBlock:
     __slots__ = ('stack_offset',)
 
     def __init__(self):
         self.stack_offset = None
 
 
-class BlockInfo(object):
+class BlockInfo:
     def __init__(self, block, offset, incoming_blocks):
         self.block = block
         self.offset = offset
@@ -823,7 +828,7 @@ class BlockInfo(object):
 
     def make_temp(self, prefix=''):
         self.tempct += 1
-        name = '$%s%s.%s' % (prefix, self.offset, self.tempct)
+        name = f'${prefix}{self.offset}.{self.tempct}'
         return name
 
     def push(self, val):

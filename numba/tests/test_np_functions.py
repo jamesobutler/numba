@@ -408,7 +408,7 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
     """
 
     def setUp(self):
-        super(TestNPFunctions, self).setUp()
+        super().setUp()
         self.ccache = CompilationCache()
         self.rnd = np.random.RandomState(42)
 
@@ -453,7 +453,7 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
                 prec = ('single'
                         if scalty in (types.float32, types.complex64)
                         else 'double')
-                msg = 'for input %r with prec %r' % (vx, prec)
+                msg = f'for input {vx!r} with prec {prec!r}'
                 self.assertPreciseEqual(got, expected,
                                         prec=prec,
                                         msg=msg,
@@ -504,10 +504,10 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
         check(x_types, x_values)
 
         # complex domain scalar context
-        x_values = [1.+0j, -1+0j, 0.0+0.0j, -0.0+0.0j, 0+1j, 0-1j, 0.5+0.0j, # noqa
-                    -0.5+0.0j, 0.5+0.5j, -0.5-0.5j, 5+5j, -5-5j,             # noqa
+        x_values = [1. + 0j, -1 + 0j, 0.0 + 0.0j, -0.0 + 0.0j, 0 + 1j, 0 - 1j, 0.5 + 0.0j, # noqa
+                    -0.5 + 0.0j, 0.5 + 0.5j, -0.5 - 0.5j, 5 + 5j, -5 - 5j,             # noqa
                     # the following are to test sin(x)/x for small x
-                    5e-21+0j, -5e-21+0j, 5e-21j, +(0-5e-21j)                 # noqa
+                    5e-21 + 0j, -5e-21 + 0j, 5e-21j, +(0 - 5e-21j)                 # noqa
                     ]
         x_types = [types.complex64, types.complex128] * (len(x_values) // 2)
         check(x_types, x_values, ulps=2)
@@ -602,8 +602,8 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
         check(x_types, x_values)
 
         # complex domain scalar context
-        x_values = [1.+0j, -1+0j, 0.0+0.0j, -0.0+0.0j, 1j, -1j, 0.5+0.0j, # noqa
-                    -0.5+0.0j, 0.5+0.5j, -0.5-0.5j, 5+5j, -5-5j]          # noqa
+        x_values = [1. + 0j, -1 + 0j, 0.0 + 0.0j, -0.0 + 0.0j, 1j, -1j, 0.5 + 0.0j, # noqa
+                    -0.5 + 0.0j, 0.5 + 0.5j, -0.5 - 0.5j, 5 + 5j, -5 - 5j]          # noqa
         x_types = [types.complex64, types.complex128] * (len(x_values) // 2 + 1)
         check(x_types, x_values)
 
@@ -3225,11 +3225,11 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
         a = np.asarray([1.0, np.nan])
         b = np.asarray([1.0, np.nan])
         self.assertFalse(cfunc(a, b))
-        self.assertEquals(pyfunc(a, b, equal_nan=True),
-                          cfunc(a, b, equal_nan=True))
+        self.assertEqual(pyfunc(a, b, equal_nan=True),
+                         cfunc(a, b, equal_nan=True))
 
         b = np.asarray([np.nan, 1.0])
-        self.assertEquals(pyfunc(a, b), cfunc(a, b))
+        self.assertEqual(pyfunc(a, b), cfunc(a, b))
 
         noise_levels = [1.0, 1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 0.0]
         zero_array = np.zeros((25, 4))
@@ -3286,7 +3286,7 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
         ]
 
         for (x, y) in numpy_data:
-            self.assertEquals(pyfunc(x, y), cfunc(x, y))
+            self.assertEqual(pyfunc(x, y), cfunc(x, y))
 
     def test_ip_not_allclose_numpy(self):
         # https://github.com/numpy/numpy/blob/4adc87dff15a247e417d50f10cc4def8e1c17a03/numpy/core/tests/test_numeric.py#L2422-L2441    # noqa: E501
@@ -3313,7 +3313,7 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
         ]
 
         for (x, y) in numpy_data:
-            self.assertEquals(pyfunc(x, y), cfunc(x, y))
+            self.assertEqual(pyfunc(x, y), cfunc(x, y))
 
     def test_return_class_is_ndarray_numpy(self):
         # https://github.com/numpy/numpy/blob/4adc87dff15a247e417d50f10cc4def8e1c17a03/numpy/core/tests/test_numeric.py#L2460-L2468    # noqa: E501
@@ -3335,8 +3335,8 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
 
         x = np.array([1.0, np.nan])
 
-        self.assertEquals(pyfunc(x, x, equal_nan=True),
-                          cfunc(x, x, equal_nan=True))
+        self.assertEqual(pyfunc(x, x, equal_nan=True),
+                         cfunc(x, x, equal_nan=True))
 
     def test_no_parameter_modification_numpy(self):
         # https://github.com/numpy/numpy/blob/4adc87dff15a247e417d50f10cc4def8e1c17a03/numpy/core/tests/test_numeric.py#L2443-L2448    # noqa: E501
@@ -3360,7 +3360,7 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
         min_int = np.iinfo(np.int_).min
         a = np.array([min_int], dtype=np.int_)
 
-        self.assertEquals(pyfunc(a, a), cfunc(a, a))
+        self.assertEqual(pyfunc(a, a), cfunc(a, a))
 
     def test_allclose_exception(self):
         self.disable_leak_check()
@@ -4422,8 +4422,8 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
         # test non-array-like input
         with self.assertRaises(TypingError) as raises:
             cfunc(
-                set([1, 2, 3]),
-                set([4, 5, 6])
+                {1, 2, 3},
+                {4, 5, 6}
             )
         self.assertIn(
             'Inputs must be array-like.',
@@ -4505,8 +4505,8 @@ class TestNPFunctions(MemoryLeakMixin, TestCase):
         # test non-array-like input
         with self.assertRaises(TypingError) as raises:
             cfunc(
-                set([1, 2]),
-                set([4, 5])
+                {1, 2},
+                {4, 5}
             )
         self.assertIn(
             'Inputs must be array-like.',

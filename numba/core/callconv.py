@@ -36,8 +36,10 @@ Status = namedtuple("Status",
 int32_t = ir.IntType(32)
 errcode_t = int32_t
 
+
 def _const_int(code):
     return ir.Constant(errcode_t, code)
+
 
 RETCODE_OK = _const_int(0)
 RETCODE_EXC = _const_int(-1)
@@ -50,9 +52,7 @@ FIRST_USEREXC = 1
 RETCODE_USEREXC = _const_int(FIRST_USEREXC)
 
 
-
-
-class BaseCallConv(object):
+class BaseCallConv:
 
     def __init__(self, context):
         self.context = context
@@ -83,8 +83,8 @@ class BaseCallConv(object):
             self.return_value(builder, retval)
 
         else:
-            raise NotImplementedError("returning {0} for {1}".format(valty,
-                                                                     retty))
+            raise NotImplementedError("returning {} for {}".format(valty,
+                                                                   retty))
 
     def return_native_none(self, builder):
         self._return_errcode_raw(builder, RETCODE_NONE)
@@ -285,7 +285,7 @@ class MinimalCallConv(BaseCallConv):
         return status, out
 
 
-class _MinimalCallHelper(object):
+class _MinimalCallHelper:
     """
     A call helper object for the "minimal" calling convention.
     User exceptions are represented as integer codes and stored in
@@ -331,6 +331,7 @@ class _MinimalCallHelper(object):
             exc_args = (msg,)
             locinfo = None
             return exc, exc_args, locinfo
+
 
 # The structure type constructed by PythonAPI.serialize_uncached()
 # i.e a {i8* pickle_buf, i32 pickle_bufsz, i8* hash_buf}
@@ -401,7 +402,7 @@ class CPUCallConv(BaseCallConv):
                         func_name=None):
         try_info = getattr(builder, '_in_try_block', False)
         self.set_static_user_exc(builder, exc, exc_args=exc_args,
-                                   loc=loc, func_name=func_name)
+                                 loc=loc, func_name=func_name)
         trystatus = self.check_try_status(builder)
         if try_info:
             # This is a hack for old-style impl.
@@ -601,7 +602,7 @@ class CPUCallConv(BaseCallConv):
         return status, out
 
 
-class ErrorModel(object):
+class ErrorModel:
 
     def __init__(self, call_conv):
         self.call_conv = call_conv
@@ -640,7 +641,7 @@ class NumpyErrorModel(ErrorModel):
 error_models = {
     'python': PythonErrorModel,
     'numpy': NumpyErrorModel,
-    }
+}
 
 
 def create_error_model(model_name, context):

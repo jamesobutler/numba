@@ -25,7 +25,8 @@ attempt_nocopy_reshape = ctypes.CFUNCTYPE(
     ctypes.c_int,  # is_f_order
 )(_helperlib.c_helpers['attempt_nocopy_reshape'])
 
-class Dim(object):
+
+class Dim:
     """A single dimension of the array
 
     Attributes
@@ -111,7 +112,7 @@ def compute_index(indices, dims):
     return sum(d.get_offset(i) for i, d in zip(indices, dims))
 
 
-class Element(object):
+class Element:
     is_array = False
 
     def __init__(self, extent):
@@ -121,7 +122,7 @@ class Element(object):
         yield self.extent
 
 
-class Array(object):
+class Array:
     """A dummy numpy array-like object.  Consider it an array without the
     actual data, but offset from the base data pointer.
 
@@ -214,7 +215,7 @@ class Array(object):
         return Extent(start, stop)
 
     def __repr__(self):
-        return '<Array dims=%s itemsize=%s>' % (self.dims, self.itemsize)
+        return f'<Array dims={self.dims} itemsize={self.itemsize}>'
 
     def __getitem__(self, item):
         if not isinstance(item, tuple):
@@ -303,11 +304,12 @@ class Array(object):
         # compute the missing dimension
         if unknownidx >= 0:
             if knownsize == 0 or self.size % knownsize != 0:
-                raise ValueError("cannot infer valid shape for unknown dimension")
+                raise ValueError(
+                    "cannot infer valid shape for unknown dimension")
             else:
                 newdims = newdims[0:unknownidx] \
-                        + (self.size // knownsize,) \
-                        + newdims[unknownidx + 1:]
+                    + (self.size // knownsize,) \
+                    + newdims[unknownidx + 1:]
 
         newsize = functools.reduce(operator.mul, newdims, 1)
 
@@ -386,7 +388,7 @@ class Array(object):
             return self
 
         elif (order in 'CA' and self.is_c_contig or
-                          order in 'FA' and self.is_f_contig):
+              order in 'FA' and self.is_f_contig):
             newshape = (self.size,)
             newstrides = (self.itemsize,)
             arr = self.from_desc(self.extent.begin, newshape, newstrides,
@@ -422,8 +424,7 @@ def iter_strides_c_contig(arr, shape=None):
             sum *= s
             yield sum * itemsize
 
-    for i in reversed(list(gen())):
-        yield i
+    yield from reversed(list(gen()))
 
 
 def is_element_indexing(item, ndim):

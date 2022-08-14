@@ -32,17 +32,18 @@ def typeof_function_type(val, c):
 class FunctionProtoModel(models.PrimitiveModel):
     """FunctionProtoModel describes the signatures of first-class functions
     """
+
     def __init__(self, dmm, fe_type):
         if isinstance(fe_type, FunctionType):
             ftype = fe_type.ftype
         elif isinstance(fe_type, FunctionPrototype):
             ftype = fe_type
         else:
-            raise NotImplementedError((type(fe_type)))
+            raise NotImplementedError(type(fe_type))
         retty = dmm.lookup(ftype.rtype).get_value_type()
         args = [dmm.lookup(t).get_value_type() for t in ftype.atypes]
         be_type = ir.PointerType(ir.FunctionType(retty, args))
-        super(FunctionProtoModel, self).__init__(dmm, fe_type, be_type)
+        super().__init__(dmm, fe_type, be_type)
 
 
 @register_model(FunctionType)
@@ -50,6 +51,7 @@ class FunctionProtoModel(models.PrimitiveModel):
 class FunctionModel(models.StructModel):
     """FunctionModel holds addresses of function implementations
     """
+
     def __init__(self, dmm, fe_type):
         members = [
             # address of cfunc wrapper function:
@@ -58,7 +60,7 @@ class FunctionModel(models.StructModel):
             # object:
             ('pyaddr', types.voidptr),
         ]
-        super(FunctionModel, self).__init__(dmm, fe_type, members)
+        super().__init__(dmm, fe_type, members)
 
 
 @lower_constant(types.Dispatcher)

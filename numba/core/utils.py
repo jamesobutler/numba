@@ -258,7 +258,7 @@ class ThreadLocalStack:
             self.pop()
 
 
-class ConfigOptions(object):
+class ConfigOptions:
     OPTIONS = {}
 
     def __init__(self):
@@ -282,13 +282,13 @@ class ConfigOptions(object):
 
     def __setattr__(self, name, value):
         if name.startswith('_'):
-            super(ConfigOptions, self).__setattr__(name, value)
+            super().__setattr__(name, value)
         else:
             self._check_attr(name)
             self._values[name] = value
 
     def __repr__(self):
-        return "Flags(%s)" % ', '.join('%s=%s' % (k, v)
+        return "Flags(%s)" % ', '.join(f'{k}={v}'
                                        for k, v in self._values.items()
                                        if v is not False)
 
@@ -372,8 +372,8 @@ class SortedMap(Mapping):
 class UniqueDict(dict):
     def __setitem__(self, key, value):
         if key in self:
-            raise AssertionError("key already in dictionary: %r" % (key,))
-        super(UniqueDict, self).__setitem__(key, value)
+            raise AssertionError(f"key already in dictionary: {key!r}")
+        super().__setitem__(key, value)
 
 
 if PYVERSION > (3, 7):
@@ -482,7 +482,7 @@ def stream_list(lst):
         start = stop
 
 
-class BenchmarkResult(object):
+class BenchmarkResult:
     def __init__(self, func, records, loop):
         self.func = func
         self.loop = loop
@@ -504,7 +504,7 @@ def format_time(tm):
         base /= 1000
     else:
         unit = units[-1]
-    return "%.1f%s" % (tm / base, unit)
+    return f"{tm / base:.1f}{unit}"
 
 
 def benchmark(func, maxsec=1):
@@ -675,6 +675,7 @@ class _RedirectSubpackage(ModuleType):
 
     >>> from numba.old_subpackage.module import item
     """
+
     def __init__(self, old_module_locals, new_module):
         old_module = old_module_locals['__name__']
         super().__init__(old_module)

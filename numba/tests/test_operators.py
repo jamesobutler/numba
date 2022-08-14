@@ -27,7 +27,7 @@ def make_static_power(exp):
     return pow_usecase
 
 
-class LiteralOperatorImpl(object):
+class LiteralOperatorImpl:
 
     @staticmethod
     def add_usecase(x, y):
@@ -151,7 +151,7 @@ class LiteralOperatorImpl(object):
 
     @staticmethod
     def not_usecase(x):
-        return not(x)
+        return not (x)
 
     @staticmethod
     def negate_usecase(x):
@@ -198,7 +198,7 @@ class LiteralOperatorImpl(object):
         return x is y
 
 
-class FunctionalOperatorImpl(object):
+class FunctionalOperatorImpl:
 
     @staticmethod
     def add_usecase(x, y):
@@ -452,7 +452,6 @@ class TestOperators(TestCase):
                                  "mismatch with %r (%r, %r)"
                                  % (typ, x, y))
 
-
     #
     # Comparison operators
     #
@@ -500,7 +499,8 @@ class TestOperators(TestCase):
         self.test_ne_scalar(flags=Noflags)
 
     def test_is_ellipsis(self):
-        cres = compile_isolated(self.op.is_usecase, (types.ellipsis, types.ellipsis))
+        cres = compile_isolated(
+            self.op.is_usecase, (types.ellipsis, types.ellipsis))
         cfunc = cres.entry_point
         self.assertTrue(cfunc(Ellipsis, Ellipsis))
 
@@ -578,7 +578,7 @@ class TestOperators(TestCase):
         for usecase in usecases:
             for tp_name, runner_name in tp_runners.items():
                 for nopython in (False, True):
-                    test_name = "test_%s_%s" % (usecase, tp_name)
+                    test_name = f"test_{usecase}_{tp_name}"
                     if nopython:
                         test_name += "_npm"
                     flags = Noflags if nopython else force_pyobj_flags
@@ -603,7 +603,6 @@ class TestOperators(TestCase):
                         test_meth = tag('important')(test_meth)
 
                     ns[test_name] = test_meth
-
 
     generate_binop_tests(locals(),
                          ('add', 'iadd', 'sub', 'isub', 'mul', 'imul'),
@@ -651,7 +650,8 @@ class TestOperators(TestCase):
         self.test_truediv_errors(flags=Noflags)
 
     def test_floordiv_errors(self, flags=force_pyobj_flags):
-        self.check_div_errors("floordiv_usecase", "division by zero", flags=flags)
+        self.check_div_errors("floordiv_usecase",
+                              "division by zero", flags=flags)
 
     def test_floordiv_errors_npm(self):
         self.test_floordiv_errors(flags=Noflags)
@@ -711,7 +711,7 @@ class TestOperators(TestCase):
     def test_add_complex(self, flags=force_pyobj_flags):
         pyfunc = self.op.add_usecase
 
-        x_operands = [1+0j, 1j, -1-1j]
+        x_operands = [1 + 0j, 1j, -1 - 1j]
         y_operands = x_operands
 
         types_list = [(types.complex64, types.complex64),
@@ -726,7 +726,7 @@ class TestOperators(TestCase):
     def test_sub_complex(self, flags=force_pyobj_flags):
         pyfunc = self.op.sub_usecase
 
-        x_operands = [1+0j, 1j, -1-1j]
+        x_operands = [1 + 0j, 1j, -1 - 1j]
         y_operands = [1, 2, 3]
 
         types_list = [(types.complex64, types.complex64),
@@ -741,7 +741,7 @@ class TestOperators(TestCase):
     def test_mul_complex(self, flags=force_pyobj_flags):
         pyfunc = self.op.mul_usecase
 
-        x_operands = [1+0j, 1j, -1-1j]
+        x_operands = [1 + 0j, 1j, -1 - 1j]
         y_operands = [1, 2, 3]
 
         types_list = [(types.complex64, types.complex64),
@@ -756,7 +756,7 @@ class TestOperators(TestCase):
     def test_truediv_complex(self, flags=force_pyobj_flags):
         pyfunc = self.op.truediv_usecase
 
-        x_operands = [1+0j, 1j, -1-1j]
+        x_operands = [1 + 0j, 1j, -1 - 1j]
         y_operands = [1, 2, 3]
 
         types_list = [(types.complex64, types.complex64),
@@ -1002,14 +1002,14 @@ class TestOperators(TestCase):
         Make sure that bitwise float operations are not allowed
         """
         def assert_reject_compile(pyfunc, argtypes, opname):
-            msg = 'expecting TypingError when compiling {}'.format(pyfunc)
+            msg = f'expecting TypingError when compiling {pyfunc}'
             with self.assertRaises(errors.TypingError, msg=msg) as raises:
                 compile_isolated(pyfunc, argtypes)
             # check error message
             fmt = _header_lead + ' {}'
             expecting = fmt.format(opname
                                    if isinstance(opname, str)
-                                   else 'Function({})'.format(opname))
+                                   else f'Function({opname})')
             self.assertIn(expecting, str(raises.exception))
 
         methods = [
@@ -1099,7 +1099,6 @@ class TestOperators(TestCase):
             cres = compile_isolated(pyfunc, [ty])
             cfunc = cres.entry_point
             self.assertAlmostEqual(pyfunc(val), cfunc(val))
-
 
     def test_negate(self):
         pyfunc = self.op.negate_usecase
@@ -1235,6 +1234,7 @@ class TestMixedInts(TestCase):
 
     def get_control_signed(self, opname):
         op = getattr(operator, opname)
+
         def control_signed(a, b):
             tp = self.get_numpy_signed_upcast(a, b)
             return op(tp(a), tp(b))
@@ -1242,6 +1242,7 @@ class TestMixedInts(TestCase):
 
     def get_control_unsigned(self, opname):
         op = getattr(operator, opname)
+
         def control_unsigned(a, b):
             tp = self.get_numpy_unsigned_upcast(a, b)
             return op(tp(a), tp(b))
@@ -1343,19 +1344,24 @@ class TestMixedInts(TestCase):
                         expected_type=float, prec='double')
 
     def test_and(self):
-        self.run_arith_binop(self.op.bitwise_and_usecase, 'and_', self.int_samples)
+        self.run_arith_binop(self.op.bitwise_and_usecase,
+                             'and_', self.int_samples)
 
     def test_or(self):
-        self.run_arith_binop(self.op.bitwise_or_usecase, 'or_', self.int_samples)
+        self.run_arith_binop(self.op.bitwise_or_usecase,
+                             'or_', self.int_samples)
 
     def test_xor(self):
-        self.run_arith_binop(self.op.bitwise_xor_usecase, 'xor', self.int_samples)
+        self.run_arith_binop(self.op.bitwise_xor_usecase,
+                             'xor', self.int_samples)
 
     def run_shift_binop(self, pyfunc, opname):
         opfunc = getattr(operator, opname)
+
         def control_signed(a, b):
             tp = self.get_numpy_signed_upcast(a, b)
             return opfunc(tp(a), tp(b))
+
         def control_unsigned(a, b):
             tp = self.get_numpy_unsigned_upcast(a, b)
             return opfunc(tp(a), tp(b))
@@ -1409,6 +1415,7 @@ class TestMixedInts(TestCase):
         def control_signed(a):
             tp = self.get_numpy_signed_upcast(a)
             return tp(-a)
+
         def control_unsigned(a):
             tp = self.get_numpy_unsigned_upcast(a)
             return tp(-a)
@@ -1422,6 +1429,7 @@ class TestMixedInts(TestCase):
         def control_signed(a):
             tp = self.get_numpy_signed_upcast(a)
             return tp(~a)
+
         def control_unsigned(a):
             tp = self.get_numpy_unsigned_upcast(a)
             return tp(~a)
@@ -1473,10 +1481,12 @@ class TestStaticPower(TestCase):
 
         self._check_pow(exponents, vals)
 
+
 class TestStringConstComparison(TestCase):
     """
     Test comparison of string constants
     """
+
     def test_eq(self):
         def test_impl1():
             s = 'test'
@@ -1505,10 +1515,12 @@ class TestStringConstComparison(TestCase):
         self.assertEqual(test_impl1(), cfunc1())
         self.assertEqual(test_impl2(), cfunc2())
 
+
 class TestBooleanLiteralOperators(TestCase):
     """
     Test operators with Boolean constants
     """
+
     def test_eq(self):
 
         def test_impl1(b):
@@ -1518,10 +1530,10 @@ class TestBooleanLiteralOperators(TestCase):
             return a == b_val
 
         def test_impl3():
-            r1 = True == True
-            r2 = True == False
-            r3 = False == True
-            r4 = False == False
+            r1 = True is True
+            r2 = True is False
+            r3 = False is True
+            r4 = False is False
             return (r1, r2, r3, r4)
 
         for a_val, b in itertools.product([True, False], repeat=2):
@@ -1544,10 +1556,10 @@ class TestBooleanLiteralOperators(TestCase):
             return a != b_val
 
         def test_impl3():
-            r1 = True != True
-            r2 = True != False
-            r3 = False != True
-            r4 = False != False
+            r1 = True is not True
+            r2 = True is not False
+            r3 = False is not True
+            r4 = False is not False
             return (r1, r2, r3, r4)
 
         for a_val, b in itertools.product([True, False], repeat=2):

@@ -1,7 +1,7 @@
 from numba.core import utils, ir, analysis, transforms, ir_utils
 
 
-class YieldPoint(object):
+class YieldPoint:
 
     def __init__(self, block, inst):
         assert isinstance(block, ir.Block)
@@ -12,7 +12,7 @@ class YieldPoint(object):
         self.weak_live_vars = None
 
 
-class GeneratorInfo(object):
+class GeneratorInfo:
 
     def __init__(self):
         # { index: YieldPoint }
@@ -27,10 +27,11 @@ class GeneratorInfo(object):
         return self.yield_points.values()
 
 
-class VariableLifetime(object):
+class VariableLifetime:
     """
     For lazily building information of variable lifetime
     """
+
     def __init__(self, blocks):
         self._blocks = blocks
 
@@ -59,7 +60,7 @@ class VariableLifetime(object):
 ir_extension_insert_dels = {}
 
 
-class PostProcessor(object):
+class PostProcessor:
     """
     A post-processor for Numba IR.
     """
@@ -187,7 +188,7 @@ class PostProcessor(object):
             # for each statement in reverse order
             for stmt in reversed(ir_block.body[:-1]):
                 # internal vars that are used here
-                live_set = set(v.name for v in stmt.list_vars())
+                live_set = {v.name for v in stmt.list_vars()}
                 dead_set = live_set & internal_dead_set
                 for T, def_func in ir_extension_insert_dels.items():
                     if isinstance(stmt, T):

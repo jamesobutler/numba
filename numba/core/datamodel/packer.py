@@ -3,8 +3,7 @@ from collections import deque
 from numba.core import types, cgutils
 
 
-
-class DataPacker(object):
+class DataPacker:
     """
     A helper to pack a number of typed arguments into a data structure.
     Omitted arguments (i.e. values with the type `Omitted`) are automatically
@@ -36,7 +35,8 @@ class DataPacker(object):
         res = []
         for i, i_formal in enumerate(self._pack_map):
             elem_ptr = cgutils.gep_inbounds(builder, ptr, 0, i)
-            val = self._models[i_formal].load_from_data_pointer(builder, elem_ptr)
+            val = self._models[i_formal].load_from_data_pointer(
+                builder, elem_ptr)
             if formal_list is None:
                 res.append((self._fe_types[i_formal], val))
             else:
@@ -57,7 +57,7 @@ class DataPacker(object):
         self._do_load(builder, ptr, formal_list)
 
 
-class ArgPacker(object):
+class ArgPacker:
     """
     Compute the position for each high-level typed argument.
     It flattens every composite argument into primitive types.
@@ -144,8 +144,7 @@ def _flatten(iterable):
     def rec(iterable):
         for i in iterable:
             if isinstance(i, (tuple, list)):
-                for j in rec(i):
-                    yield j
+                yield from rec(i)
             else:
                 yield i
     return rec(iterable)
@@ -156,7 +155,8 @@ _APPEND_NEXT_VALUE = 2
 _APPEND_EMPTY_TUPLE = 3
 _POP = 4
 
-class _Unflattener(object):
+
+class _Unflattener:
     """
     An object used to unflatten nested sequences after a given pattern
     (an arbitrarily nested sequence).
@@ -172,6 +172,7 @@ class _Unflattener(object):
         (an iterable of nested sequences).
         """
         code = []
+
         def rec(iterable):
             for i in iterable:
                 if isinstance(i, (tuple, list)):

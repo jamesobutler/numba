@@ -43,6 +43,7 @@ def unset_macosx_deployment_target():
     if 'MACOSX_DEPLOYMENT_TARGET' in os.environ:
         del os.environ['MACOSX_DEPLOYMENT_TARGET']
 
+
 class TestCompilerChecks(TestCase):
 
     # NOTE: THIS TEST MUST ALWAYS RUN ON WINDOWS, DO NOT SKIP
@@ -155,14 +156,15 @@ class TestLegacyAPI(BasePYCCTest):
 
         bitcode_wrapper_magic = b'\xde\xc0\x17\x0b'
         bitcode_magic = b'BC\xc0\xde'
-        self.assertTrue(bc.startswith((bitcode_magic, bitcode_wrapper_magic)), bc)
+        self.assertTrue(bc.startswith(
+            (bitcode_magic, bitcode_wrapper_magic)), bc)
 
 
 @needs_external_compilers
 class TestCC(BasePYCCTest):
 
     def setUp(self):
-        super(TestCC, self).setUp()
+        super().setUp()
         from numba.tests import compile_with_pycc
         self._test_module = compile_with_pycc
         imp.reload(self._test_module)
@@ -189,10 +191,10 @@ class TestCC(BasePYCCTest):
             else:
                 raise RuntimeError('cannot disable numba package')
 
-            sys.path.insert(0, %(path)r)
-            import %(name)s as lib
-            """ % {'name': lib.__name__,
-                   'path': os.path.dirname(lib.__file__)}
+            sys.path.insert(0, {path!r})
+            import {name} as lib
+            """.format(name=lib.__name__,
+                       path=os.path.dirname(lib.__file__))
         code = prolog.strip(' ') + code
         subprocess.check_call([sys.executable, '-c', code])
 
@@ -270,10 +272,10 @@ class TestCC(BasePYCCTest):
                 res = lib.power(2, 7)
                 assert res == 128
                 res = lib.random(42)
-                assert_allclose(res, %(expected)s)
+                assert_allclose(res, {expected})
                 res = lib.spacing(1.0)
                 assert_allclose(res, 2**-52)
-                """ % {'expected': expected}
+                """.format(expected=expected)
             self.check_cc_compiled_in_subprocess(lib, code)
 
     def test_compile_nrt(self):
@@ -314,7 +316,7 @@ class TestCC(BasePYCCTest):
             self.assertPreciseEqual(res, hash("A"))
             res = lib.hash_str("A")
             self.assertPreciseEqual(res, hash("A"))
-            
+
             code = """if 1:
                 from numpy.testing import assert_equal
                 res = lib.hash_literal_str_A()

@@ -16,13 +16,16 @@ from numba.core.utils import cached_property, get_hashable_key
 # in _dispatcher.c's internal caches).
 _typecodes = itertools.count()
 
+
 def _autoincr():
     n = next(_typecodes)
     # 4 billion types should be enough, right?
     assert n < 2 ** 32, "Limited to 4 billion types"
     return n
 
+
 _typecache: ptDict[weakref.ref, weakref.ref] = {}
+
 
 def _on_type_disposal(wr, _pop=_typecache.pop):
     _pop(wr, None)
@@ -41,7 +44,7 @@ class _TypeMetaclass(ABCMeta):
         # Numba internal type (one which is defined somewhere under the `numba`
         # module) or an external type (one which is defined elsewhere, for
         # example a user defined type).
-        super(_TypeMetaclass, cls).__init__(name, bases, orig_vars)
+        super().__init__(name, bases, orig_vars)
         root = (cls.__module__.split('.'))[0]
         cls._is_internal = root == "numba"
 
@@ -124,7 +127,7 @@ class Type(metaclass=_TypeMetaclass):
         return not (self == other)
 
     def __reduce__(self):
-        reconstructor, args, state = super(Type, self).__reduce__()
+        reconstructor, args, state = super().__reduce__()
         return (_type_reconstructor, (reconstructor, args, state))
 
     def unify(self, typingctx, other):
@@ -207,13 +210,13 @@ class Type(metaclass=_TypeMetaclass):
                 layout = 'A'
         else:
             # Raise a KeyError to not be handled by collection constructors (e.g. list).
-            raise KeyError(f"Can only index numba types with slices with no start or stop, got {args}.")
+            raise KeyError(
+                f"Can only index numba types with slices with no start or stop, got {args}.")
 
         return ndim, layout
 
     def cast_python_value(self, args):
         raise NotImplementedError
-
 
     @property
     def is_internal(self):
@@ -222,11 +225,13 @@ class Type(metaclass=_TypeMetaclass):
         return self._is_internal
 
     def dump(self, tab=''):
-        print(f'{tab}DUMP {type(self).__name__}[code={self._code}, name={self.name}]')
+        print(
+            f'{tab}DUMP {type(self).__name__}[code={self._code}, name={self.name}]')
 
 # XXX we should distinguish between Dummy (no meaningful
 # representation, e.g. None or a builtin function) and Opaque (has a
 # meaningful representation, e.g. ExternalFunctionPointer)
+
 
 class Dummy(Type):
     """
@@ -332,7 +337,7 @@ class IteratorType(IterableType):
     """
 
     def __init__(self, name, **kwargs):
-        super(IteratorType, self).__init__(name, **kwargs)
+        super().__init__(name, **kwargs)
 
     @abstractproperty
     def yield_type(self):
@@ -424,7 +429,7 @@ class Literal(Type):
             )
         self._literal_init(value)
         fmt = "Literal[{}]({})"
-        super(Literal, self).__init__(fmt.format(type(value).__name__, value))
+        super().__init__(fmt.format(type(value).__name__, value))
 
     def _literal_init(self, value):
         self._literal_value = value
@@ -454,12 +459,11 @@ class Literal(Type):
                 # resolved to a type, for example, LiteralStrKeyDict has a
                 # literal_value that is a python dict for which there's no
                 # `typeof` support.
-                msg = "{} has no attribute 'literal_type'".format(self)
+                msg = f"{self} has no attribute 'literal_type'"
                 raise AttributeError(msg)
             self._literal_type_cache = res
 
         return self._literal_type_cache
-
 
 
 class TypeRef(Dummy):
@@ -467,20 +471,22 @@ class TypeRef(Dummy):
 
     Used when a type is passed as a value.
     """
+
     def __init__(self, instance_type):
         self.instance_type = instance_type
-        super(TypeRef, self).__init__('typeref[{}]'.format(self.instance_type))
+        super().__init__(f'typeref[{self.instance_type}]')
 
     @property
     def key(self):
         return self.instance_type
 
 
-class InitialValue(object):
+class InitialValue:
     """
     Used as a mixin for a type will potentially have an initial value that will
     be carried in the .initial_value attribute.
     """
+
     def __init__(self, initial_value):
         self._initial_value = initial_value
 
@@ -496,9 +502,10 @@ class Poison(Type):
     to call the constructor with the type that's being poisoned (for whatever
     reason) but this isn't strictly required.
     """
+
     def __init__(self, ty):
         self.ty = ty
-        super(Poison, self).__init__(name="Poison<%s>" % ty)
+        super().__init__(name="Poison<%s>" % ty)
 
     def __unliteral__(self):
         return Poison(self)

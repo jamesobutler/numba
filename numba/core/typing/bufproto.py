@@ -14,12 +14,12 @@ _pep3118_scalar_map = {
     'd': types.float64,
     'Zf': types.complex64,
     'Zd': types.complex128,
-    }
+}
 
 _type_map = {
     bytearray: types.ByteArray,
     array.array: types.PyArray,
-    }
+}
 
 _type_map[memoryview] = types.MemoryView
 _type_map[bytes] = types.Bytes
@@ -43,7 +43,7 @@ def decode_pep3118_format(fmt, itemsize):
         # in front of the PEP 3118 format string.
         return _pep3118_scalar_map[fmt.lstrip('=')]
     except KeyError:
-        raise ValueError("unsupported PEP 3118 format %r" % (fmt,))
+        raise ValueError(f"unsupported PEP 3118 format {fmt!r}")
 
 
 def get_type_class(typ):

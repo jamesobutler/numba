@@ -79,18 +79,19 @@ svml_funcs = {
     "trunc":      [],  # np.trunc, math.trunc],
 }
 # TODO: these functions are not vectorizable with complex types
-complex_funcs_exclude = ["sqrt", "tan", "log10", "expm1", "log1p", "tanh", "log"]
+complex_funcs_exclude = ["sqrt", "tan",
+                         "log10", "expm1", "log1p", "tanh", "log"]
 
 # remove untested entries
 svml_funcs = {k: v for k, v in svml_funcs.items() if len(v) > 0}
 # lists for functions which belong to numpy and math modules correpondently
-numpy_funcs = [f for f, v in svml_funcs.items() if "<ufunc" in \
-                  [str(p).split(' ')[0] for p in v]]
-other_funcs = [f for f, v in svml_funcs.items() if "<built-in" in \
-                  [str(p).split(' ')[0] for p in v]]
+numpy_funcs = [f for f, v in svml_funcs.items() if "<ufunc" in
+               [str(p).split(' ')[0] for p in v]]
+other_funcs = [f for f, v in svml_funcs.items() if "<built-in" in
+               [str(p).split(' ')[0] for p in v]]
 
 
-def func_patterns(func, args, res, dtype, mode, vlen, fastmath, pad=' '*8):
+def func_patterns(func, args, res, dtype, mode, vlen, fastmath, pad=' ' * 8):
     """
     For a given function and its usage modes,
     returns python code and assembly patterns it should and should not generate
@@ -98,28 +99,27 @@ def func_patterns(func, args, res, dtype, mode, vlen, fastmath, pad=' '*8):
 
     # generate a function call according to the usecase
     if mode == "scalar":
-        arg_list = ','.join([a+'[0]' for a in args])
-        body = '%s%s[0] += math.%s(%s)\n' % (pad, res, func, arg_list)
+        arg_list = ','.join([a + '[0]' for a in args])
+        body = f'{pad}{res}[0] += math.{func}({arg_list})\n'
     elif mode == "numpy":
-        body = '%s%s += np.%s(%s)' % (pad, res, func, ','.join(args))
+        body = '{}{} += np.{}({})'.format(pad, res, func, ','.join(args))
         body += '.astype(np.%s)\n' % dtype if dtype.startswith('int') else '\n'
     else:
         assert mode == "range" or mode == "prange"
-        arg_list = ','.join([a+'[i]' for a in args])
-        body = '{pad}for i in {mode}({res}.size):\n' \
-               '{pad}{pad}{res}[i] += math.{func}({arg_list})\n'. \
-               format(**locals())
+        arg_list = ','.join([a + '[i]' for a in args])
+        body = f'{pad}for i in {mode}({res}.size):\n' \
+               f'{pad}{pad}{res}[i] += math.{func}({arg_list})\n'
     # TODO: refactor so this for-loop goes into umbrella function,
     #       'mode' can be 'numpy', '0', 'i' instead
     # TODO: it will enable mixed usecases like prange + numpy
 
     # type specialization
     is_f32 = dtype == 'float32' or dtype == 'complex64'
-    f = func+'f' if is_f32 else func
-    v = vlen*2 if is_f32 else vlen
+    f = func + 'f' if is_f32 else func
+    v = vlen * 2 if is_f32 else vlen
     # general expectations
     prec_suff = '' if fastmath else '_ha'
-    scalar_func = '$_'+f if config.IS_OSX else '$'+f
+    scalar_func = '$_' + f if config.IS_OSX else '$' + f
     svml_func = '__svml_%s%d%s,' % (f, v, prec_suff)
     if mode == "scalar":
         contains = [scalar_func]
@@ -127,9 +127,9 @@ def func_patterns(func, args, res, dtype, mode, vlen, fastmath, pad=' '*8):
     else:            # will vectorize
         contains = [svml_func]
         avoids = []  # [scalar_func] - TODO: if possible, force LLVM to prevent
-                     #                     generating the failsafe scalar paths
+        #                     generating the failsafe scalar paths
         if vlen != 8 and (is_f32 or dtype == 'int32'):  # Issue #3016
-            avoids += ['%zmm', '__svml_%s%d%s,' % (f, v*2, prec_suff)]
+            avoids += ['%zmm', '__svml_%s%d%s,' % (f, v * 2, prec_suff)]
     # special handling
     if func == 'sqrt':
         if mode == "scalar":
@@ -152,9 +152,9 @@ def combo_svml_usecase(dtype, mode, vlen, fastmath, name):
     """ Combine multiple function calls under single umbrella usecase """
 
     name = usecase_name(dtype, mode, vlen, name)
-    body = """def {name}(n):
+    body = f"""def {name}(n):
         x   = np.empty(n*8, dtype=np.{dtype})
-        ret = np.empty_like(x)\n""".format(**locals())
+        ret = np.empty_like(x)\n"""
     funcs = set(numpy_funcs if mode == "numpy" else other_funcs)
     if dtype.startswith('complex'):
         funcs = funcs.difference(complex_funcs_exclude)
@@ -166,7 +166,7 @@ def combo_svml_usecase(dtype, mode, vlen, fastmath, name):
         avoids.update(a)
         body += b
         contains.update(c)
-    body += " "*8 + "return ret"
+    body += " " * 8 + "return ret"
     # now compile and return it along with its body in __doc__  and patterns
     ldict = {}
     exec(body, globals(), ldict)
@@ -181,7 +181,7 @@ class TestSVMLGeneration(TestCase):
     # env mutating, must not run in parallel
     _numba_parallel_test_ = False
     # RE for a generic symbol reference and for each particular SVML function
-    asm_filter = re.compile('|'.join(['\$[a-z_]\w+,']+list(svml_funcs)))
+    asm_filter = re.compile('|'.join([r'\$[a-z_]\w+,'] + list(svml_funcs)))
 
     @classmethod
     def mp_runner(cls, testname, outqueue):
@@ -202,6 +202,7 @@ class TestSVMLGeneration(TestCase):
         skipped = dtype.startswith('int') and vlen == 2
         sig = (numba.int64,)
         # unit test body template
+
         @staticmethod
         def run_template():
             fn, contains, avoids = combo_svml_usecase(dtype, mode, vlen,
@@ -209,20 +210,20 @@ class TestSVMLGeneration(TestCase):
                                                       flags['name'])
             # look for specific patterns in the asm for a given target
             with override_env_config('NUMBA_CPU_NAME', vlen2cpu[vlen]), \
-                 override_env_config('NUMBA_CPU_FEATURES', vlen2cpu_features[vlen]):
+                    override_env_config('NUMBA_CPU_FEATURES', vlen2cpu_features[vlen]):
                 # recompile for overridden CPU
                 try:
                     jitted_fn = njit(sig, fastmath=flags['fastmath'],
                                      error_model=flags['error_model'],)(fn)
                 except:
-                    raise Exception("raised while compiling "+fn.__doc__)
+                    raise Exception("raised while compiling " + fn.__doc__)
             asm = jitted_fn.inspect_asm(sig)
-            missed = [pattern for pattern in contains if not pattern in asm]
+            missed = [pattern for pattern in contains if pattern not in asm]
             found = [pattern for pattern in avoids if pattern in asm]
             ok = not missed and not found
             detail = '\n'.join(
                 [line for line in asm.split('\n')
-                 if cls.asm_filter.search(line) and not '"' in line])
+                 if cls.asm_filter.search(line) and '"' not in line])
             msg = (
                 f"While expecting {missed} and not {found},\n"
                 f"it contains:\n{detail}\n"
@@ -272,7 +273,7 @@ class TestSVMLGeneration(TestCase):
                         cls._inject_test(dtype, mode, vlen, dict(flags))
         # mark important
         for n in ( "test_int32_range4_usecase",  # issue #3016
-                    ):
+                   ):
             setattr(cls, n, tag("important")(getattr(cls, n)))
 
 
@@ -305,11 +306,11 @@ class TestSVML(TestCase):
         self.fastflags = Flags()
         self.fastflags.nrt = True
         self.fastflags.fastmath = cpu.FastMathOptions(True)
-        super(TestSVML, self).__init__(*args)
+        super().__init__(*args)
 
     def compile(self, func, *args, **kwargs):
         assert not kwargs
-        sig = tuple([numba.typeof(x) for x in args])
+        sig = tuple(numba.typeof(x) for x in args)
 
         std = compile_isolated(func, sig, flags=self.flags)
         fast = compile_isolated(func, sig, flags=self.fastflags)
@@ -357,7 +358,7 @@ class TestSVML(TestCase):
 
         # look for specific patterns in the asm for a given target
         with override_env_config('NUMBA_CPU_NAME', cpu_name), \
-             override_env_config('NUMBA_CPU_FEATURES', cpu_features):
+                override_env_config('NUMBA_CPU_FEATURES', cpu_features):
             # recompile for overridden CPU
             jitstd, jitfast = self.compile(pyfunc, *args)
             if std_pattern:
@@ -441,10 +442,10 @@ class TestSVML(TestCase):
     def test_svml_working_in_non_isolated_context(self):
         @njit(fastmath={'fast'}, error_model="numpy")
         def impl(n):
-            x   = np.empty(n * 8, dtype=np.float64)
+            x = np.empty(n * 8, dtype=np.float64)
             ret = np.empty_like(x)
             for i in range(ret.size):
-                    ret[i] += math.cosh(x[i])
+                ret[i] += math.cosh(x[i])
             return ret
         impl(1)
         self.assertTrue('intel_svmlcc' in impl.inspect_llvm(impl.signatures[0]))

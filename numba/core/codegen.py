@@ -69,6 +69,7 @@ def dump(header, body, lang):
 
             lexer_map = {'llvm': llvm_lexer, 'asm': gas_lexer}
             lexer = lexer_map[lang]
+
             def printer(arg):
                 print(highlight(arg, lexer(),
                       Terminal256Formatter(style=by_colorscheme())))
@@ -80,7 +81,7 @@ def dump(header, body, lang):
     print('=' * 80)
 
 
-class _CFG(object):
+class _CFG:
     """
     Wraps the CFG graph for different display method.
 
@@ -88,6 +89,7 @@ class _CFG(object):
     the graph in DOT format.  The ``.display()`` method plots the graph in
     PDF.  If in IPython notebook, the returned image can be inlined.
     """
+
     def __init__(self, cres, name, py_func, **kwargs):
         self.cres = cres
         self.name = name
@@ -116,13 +118,13 @@ class _CFG(object):
 
         _default = False
         _highlight = SimpleNamespace(incref=_default,
-                                    decref=_default,
-                                    returns=_default,
-                                    raises=_default,
-                                    meminfo=_default,
-                                    branches=_default,
-                                    llvm_intrin_calls=_default,
-                                    function_calls=_default,)
+                                     decref=_default,
+                                     returns=_default,
+                                     raises=_default,
+                                     meminfo=_default,
+                                     branches=_default,
+                                     llvm_intrin_calls=_default,
+                                     function_calls=_default,)
         _interleave = SimpleNamespace(python=_default, lineinfo=_default)
 
         def parse_config(_config, kwarg):
@@ -253,7 +255,7 @@ class _CFG(object):
             n = 300
             if len(s) > n:
                 hs = str(hash(s))
-                s = '{}...<hash={}>'.format(s[:n], hs)
+                s = f'{s[:n]}...<hash={hs}>'
             s = html.escape(s) # deals with  &, < and >
             s = s.replace('\\{', "&#123;")
             s = s.replace('\\}', "&#125;")
@@ -444,7 +446,7 @@ class _CFG(object):
             # add in the port line at the end of the block if it was present
             # (this was built right at the top of the parse)
             if port_line:
-                new_lines.append('<tr>{}</tr>'.format(port_line))
+                new_lines.append(f'<tr>{port_line}</tr>')
 
             # If there was data, create a table, else don't!
             dat = ''.join(new_lines)
@@ -452,7 +454,7 @@ class _CFG(object):
                 tab = (('<table id="%s" BORDER="1" CELLBORDER="0" '
                        'CELLPADDING="0" CELLSPACING="0">%s</table>') % (idc,
                                                                         dat))
-                label = '<{}>'.format(tab)
+                label = f'<{tab}>'
             else:
                 label = ''
 
@@ -484,8 +486,8 @@ class _CFG(object):
                                 '>{}</td></tr>').format(v, k))
             # The first < and last > are DOT syntax, rest is DOT HTML.
             f.node("Key", label=('<<table BORDER="1" CELLBORDER="1" '
-                    'CELLPADDING="2" CELLSPACING="1"><tr><td BORDER="0">'
-                    'Key:</td></tr>{}</table>>').format(''.join(key_tab)))
+                                 'CELLPADDING="2" CELLSPACING="1"><tr><td BORDER="0">'
+                                 'Key:</td></tr>{}</table>>').format(''.join(key_tab)))
 
         # Render if required
         if filename is not None or view is not None:
@@ -555,7 +557,7 @@ class CodeLibrary(metaclass=ABCMeta):
         return self._name
 
     def __repr__(self):
-        return "<Library %r at 0x%x>" % (self.name, id(self))
+        return f"<Library {self.name!r} at 0x{id(self):x}>"
 
     def _raise_if_finalized(self):
         if self._finalized:
@@ -624,16 +626,16 @@ class CodeLibrary(metaclass=ABCMeta):
 
     def _get_compiled_object(self):
         if not self._object_caching_enabled:
-            raise ValueError("object caching not enabled in %s" % (self,))
+            raise ValueError(f"object caching not enabled in {self}")
         if self._compiled_object is None:
-            raise RuntimeError("no compiled object yet for %s" % (self,))
+            raise RuntimeError(f"no compiled object yet for {self}")
         return self._compiled_object
 
     def _set_compiled_object(self, value):
         if not self._object_caching_enabled:
-            raise ValueError("object caching not enabled in %s" % (self,))
+            raise ValueError(f"object caching not enabled in {self}")
         if self._compiled:
-            raise ValueError("library already compiled: %s" % (self,))
+            raise ValueError(f"library already compiled: {self}")
         self._compiled_object = value
         self._disable_inspection = True
 
@@ -872,8 +874,10 @@ class CPUCodeLibrary(CodeLibrary):
                           % (sym.name.decode(),
                              sym['st_size'],
                              sym['st_value'],
-                             descriptions.describe_symbol_type(sym['st_info']['type']),
-                             descriptions.describe_symbol_bind(sym['st_info']['bind']),
+                             descriptions.describe_symbol_type(
+                                 sym['st_info']['type']),
+                             descriptions.describe_symbol_bind(
+                                 sym['st_info']['bind']),
                              ))
         print()
 
@@ -942,7 +946,7 @@ class CPUCodeLibrary(CodeLibrary):
             self._codegen._engine._load_defined_symbols(self._shared_module)
             return self
         else:
-            raise ValueError("unsupported serialization kind %r" % (kind,))
+            raise ValueError(f"unsupported serialization kind {kind!r}")
 
 
 class AOTCodeLibrary(CPUCodeLibrary):
@@ -999,7 +1003,7 @@ class JITCodeLibrary(CPUCodeLibrary):
             self._codegen._engine.finalize_object()
 
 
-class RuntimeLinker(object):
+class RuntimeLinker:
     """
     For tracking unresolved symbols generated at runtime due to recursion.
     """
@@ -1024,7 +1028,8 @@ class RuntimeLinker(object):
                 if engine.is_symbol_defined(gv.name):
                     continue
                 # Allocate a memory space for the pointer
-                abortfn = rtsys.library.get_pointer_to_function("nrt_unresolved_abort")
+                abortfn = rtsys.library.get_pointer_to_function(
+                    "nrt_unresolved_abort")
                 ptr = ctypes.c_void_p(abortfn)
                 engine.add_global_mapping(gv, ctypes.addressof(ptr))
                 self._unresolved[sym] = ptr
@@ -1054,6 +1059,7 @@ class RuntimeLinker(object):
             # Delete resolved
             del self._unresolved[name]
 
+
 def _proxy(old):
     @functools.wraps(old)
     def wrapper(self, *args, **kwargs):
@@ -1061,11 +1067,12 @@ def _proxy(old):
     return wrapper
 
 
-class JitEngine(object):
+class JitEngine:
     """Wraps an ExecutionEngine to provide custom symbol tracking.
     Since the symbol tracking is incomplete  (doesn't consider
     loaded code object), we are not putting it in llvmlite.
     """
+
     def __init__(self, ee):
         self._ee = ee
         # Track symbol defined via codegen'd Module
@@ -1113,7 +1120,7 @@ class JitEngine(object):
     get_function_address = _proxy(ll.ExecutionEngine.get_function_address)
     get_global_value_address = _proxy(
         ll.ExecutionEngine.get_global_value_address
-        )
+    )
 
 
 class Codegen(metaclass=ABCMeta):
@@ -1284,7 +1291,7 @@ class CPUCodegen(Codegen):
                 "https://numba.readthedocs.io/en/stable/user/faq.html#llvm-locale-bug "
                 "for more information."
                 % (loc,))
-        raise AssertionError("Unexpected IR:\n%s\n" % (ir_out,))
+        raise AssertionError(f"Unexpected IR:\n{ir_out}\n")
 
     def magic_tuple(self):
         """

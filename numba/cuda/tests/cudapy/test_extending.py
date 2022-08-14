@@ -8,12 +8,13 @@ class Interval:
     """
     A half-open interval on the real number line.
     """
+
     def __init__(self, lo, hi):
         self.lo = lo
         self.hi = hi
 
     def __repr__(self):
-        return 'Interval(%f, %f)' % (self.lo, self.hi)
+        return f'Interval({self.lo:f}, {self.hi:f})'
 
     @property
     def width(self):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Script to commit the doc build outputs into the github-pages repo.
 
 Use:
@@ -11,7 +10,6 @@ that is how the resulting directory will be named.
 
 In practice, you should use either actual clean tags from a current build or
 something like 'current' as a stable URL for the most current version of the """
-from __future__ import print_function, division, absolute_import
 
 #-----------------------------------------------------------------------------
 # Imports
@@ -37,6 +35,8 @@ pages_repo = 'git@github.com:numba/numba-doc.git'
 #-----------------------------------------------------------------------------
 # Functions
 #-----------------------------------------------------------------------------
+
+
 def sub_environment():
     """Return an environment dict for executing subcommands in."""
     env = os.environ.copy()
@@ -79,11 +79,12 @@ def sh3(cmd):
 
 def init_repo(path):
     """clone the gh-pages repo if we haven't already."""
-    sh("git clone %s %s"%(pages_repo, path))
+    sh(f"git clone {pages_repo} {path}")
     here = os.getcwd()
     cd(path)
     sh('git checkout gh-pages')
     cd(here)
+
 
 #-----------------------------------------------------------------------------
 # Script starts
@@ -130,10 +131,10 @@ if __name__ == '__main__':
     try:
         cd(pages_dir)
         status = sh2('git status | head -1').decode()
-        branch = re.match('\#?\s*On branch (.*)$', status).group(1)
+        branch = re.match(r'\#?\s*On branch (.*)$', status).group(1)
         if branch != 'gh-pages':
-            e = 'On %r, git branch is %r, MUST be "gh-pages"' % (pages_dir,
-                                                                 branch)
+            e = 'On {!r}, git branch is {!r}, MUST be "gh-pages"'.format(pages_dir,
+                                                                         branch)
             raise RuntimeError(e)
 
         sh('git add -A %s' % tag)

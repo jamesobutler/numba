@@ -14,8 +14,8 @@ from numba import _dynfunc, _helperlib
 from numba.core.compiler_lock import global_compiler_lock
 from numba.core.pythonapi import PythonAPI
 from numba.core.imputils import (user_function, user_generator,
-                       builtin_registry, impl_ret_borrowed,
-                       RegistryLoader)
+                                 builtin_registry, impl_ret_borrowed,
+                                 RegistryLoader)
 from numba.cpython import builtins
 
 GENERIC_POINTER = llvmir.PointerType(llvmir.IntType(8))
@@ -23,7 +23,7 @@ PYOBJECT = GENERIC_POINTER
 void_ptr = GENERIC_POINTER
 
 
-class OverloadSelector(object):
+class OverloadSelector:
     """
     An object matching an actual signature against a registry of formal
     signatures and choosing the best candidate, if any.
@@ -73,9 +73,9 @@ class OverloadSelector(object):
             same = list(takewhile(lambda x: genericity[x] == firstscore,
                                   ordered))
             if len(same) > 1:
-                msg = ["{n} ambiguous signatures".format(n=len(same))]
+                msg = [f"{len(same)} ambiguous signatures"]
                 for sig in same:
-                    msg += ["{0} => {1}".format(sig, candidates[sig])]
+                    msg += [f"{sig} => {candidates[sig]}"]
                 raise errors.NumbaTypeError('\n'.join(msg))
         return ordered[0]
 
@@ -167,7 +167,7 @@ def _load_global_helpers():
             ll.add_symbol("PyExc_%s" % (obj.__name__), id(obj))
 
 
-class BaseContext(object):
+class BaseContext:
     """
 
     Notes on Structure
@@ -345,7 +345,7 @@ class BaseContext(object):
         obj = copy.copy(self)  # shallow copy
         for k, v in kws.items():
             if not hasattr(obj, k):
-                raise NameError("unknown option {0!r}".format(k))
+                raise NameError(f"unknown option {k!r}")
             setattr(obj, k, v)
         if obj.codegen() is not self.codegen():
             # We can't share functions across different codegens
@@ -415,7 +415,8 @@ class BaseContext(object):
     def declare_function(self, module, fndesc):
         fnty = self.call_conv.get_function_type(fndesc.restype, fndesc.argtypes)
         fn = cgutils.get_or_insert_function(module, fnty, fndesc.mangled_name)
-        self.call_conv.decorate_function(fn, fndesc.args, fndesc.argtypes, noalias=fndesc.noalias)
+        self.call_conv.decorate_function(
+            fn, fndesc.args, fndesc.argtypes, noalias=fndesc.noalias)
         if fndesc.inline:
             fn.attributes.add('alwaysinline')
             # alwaysinline overrides optnone
@@ -508,7 +509,8 @@ class BaseContext(object):
             impl = self._get_constants.find((ty,))
             return impl(self, builder, ty, val)
         except NotImplementedError:
-            raise NotImplementedError("Cannot lower constant of type '%s'" % (ty,))
+            raise NotImplementedError(
+                f"Cannot lower constant of type '{ty}'")
 
     def get_constant(self, ty, val):
         """
@@ -558,7 +560,8 @@ class BaseContext(object):
             self.refresh()
             return self.get_function(fn, sig, _firstcall=False)
 
-        raise NotImplementedError("No definition for lowering %s%s" % (key, sig))
+        raise NotImplementedError(
+            f"No definition for lowering {key}{sig}")
 
     def get_generator_desc(self, genty):
         """
@@ -595,6 +598,7 @@ class BaseContext(object):
                 return None
             else:
                 pyval = getattr(typ.pymod, attr)
+
                 def imp(context, builder, typ, val, attr):
                     llval = self.get_constant_generic(builder, attrty, pyval)
                     return impl_ret_borrowed(context, builder, attrty, llval)
@@ -613,7 +617,8 @@ class BaseContext(object):
         except errors.NumbaNotImplementedError:
             pass
 
-        raise NotImplementedError("No definition for lowering %s.%s" % (typ, attr))
+        raise NotImplementedError(
+            f"No definition for lowering {typ}.{attr}")
 
     def get_setattr(self, attr, sig):
         """
@@ -702,7 +707,7 @@ class BaseContext(object):
             return impl(self, builder, fromty, toty, val)
         except errors.NumbaNotImplementedError:
             raise errors.NumbaNotImplementedError(
-                "Cannot cast %s to %s: %s" % (fromty, toty, val))
+                f"Cannot cast {fromty} to {toty}: {val}")
 
     def generic_compare(self, builder, key, argtypes, args):
         """
@@ -789,7 +794,8 @@ class BaseContext(object):
             cstr = self.insert_const_string(mod, format_string)
         else:
             cstr = format_string
-        fnty = llvmir.FunctionType(llvmir.IntType(32), (GENERIC_POINTER,), var_arg=True)
+        fnty = llvmir.FunctionType(llvmir.IntType(
+            32), (GENERIC_POINTER,), var_arg=True)
         fn = cgutils.get_or_insert_function(mod, fnty, "printf")
         return builder.call(fn, (cstr,) + tuple(args))
 
@@ -886,7 +892,8 @@ class BaseContext(object):
         Given the function descriptor of an internally compiled function,
         emit a call to that function with the given arguments.
         """
-        status, res = self.call_internal_no_propagate(builder, fndesc, sig, args)
+        status, res = self.call_internal_no_propagate(
+            builder, fndesc, sig, args)
         with cgutils.if_unlikely(builder, status.is_error):
             self.call_conv.return_status_propagate(builder, status)
 
@@ -1038,15 +1045,18 @@ class BaseContext(object):
                 (typ.layout not in 'FC' or ary.nbytes > size_limit)):
             # get pointer from the ary
             dataptr = ary.ctypes.data
-            data = self.add_dynamic_addr(builder, dataptr, info=str(type(dataptr)))
-            rt_addr = self.add_dynamic_addr(builder, id(ary), info=str(type(ary)))
+            data = self.add_dynamic_addr(
+                builder, dataptr, info=str(type(dataptr)))
+            rt_addr = self.add_dynamic_addr(
+                builder, id(ary), info=str(type(ary)))
         else:
             # Handle data: reify the flattened array in "C" or "F" order as a
             # global array of bytes.
             flat = ary.flatten(order=typ.layout)
             # Note: we use `bytearray(flat.data)` instead of `bytearray(flat)` to
             #       workaround issue #1850 which is due to numpy issue #3147
-            consts = cgutils.create_constant_array(llvmir.IntType(8), bytearray(flat.data))
+            consts = cgutils.create_constant_array(
+                llvmir.IntType(8), bytearray(flat.data))
             data = cgutils.global_constant(builder, ".const.array.data", consts)
             # Ensure correct data alignment (issue #1933)
             data.align = self.get_abi_alignment(datatype)
@@ -1089,7 +1099,7 @@ class BaseContext(object):
         llvoidptr = self.get_value_type(types.voidptr)
         addr = self.get_constant(types.uintp, intaddr).inttoptr(llvoidptr)
         # Use a unique name by embedding the address value
-        symname = 'numba.dynamic.globals.{:x}'.format(intaddr)
+        symname = f'numba.dynamic.globals.{intaddr:x}'
         gv = cgutils.add_global_variable(mod, llvoidptr, symname)
         # Use linkonce linkage to allow merging with other GV of the same name.
         # And, avoid optimization from assuming its value.
@@ -1173,7 +1183,8 @@ class BaseContext(object):
         """
         raise NotImplementedError(f"{self} does not support ufunc")
 
-class _wrap_impl(object):
+
+class _wrap_impl:
     """
     A wrapper object to call an implementation function with some predefined
     (context, signature) arguments.
@@ -1197,6 +1208,7 @@ class _wrap_impl(object):
     def __repr__(self):
         return "<wrapped %s>" % repr(self._callable)
 
+
 def _has_loc(fn):
     """Does function *fn* take ``loc`` argument?
     """
@@ -1204,7 +1216,7 @@ def _has_loc(fn):
     return 'loc' in sig.parameters
 
 
-class _wrap_missing_loc(object):
+class _wrap_missing_loc:
 
     def __init__(self, fn):
         self.func = fn # store this to help with debug

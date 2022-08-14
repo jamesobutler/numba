@@ -15,6 +15,7 @@ from numba.core.errors import TypingError
 class TestTupleIntrinsic(TestCase):
     """Tests for numba.unsafe.tuple
     """
+
     def test_tuple_setitem(self):
         @njit
         def foo(tup, idxs, vals):
@@ -27,8 +28,8 @@ class TestTupleIntrinsic(TestCase):
         for _ in range(20):
             # Random data
             n = random.randint(1, 10)
-            tup = tuple([random.randint(0, n) for i in range(n)])
-            vals = tuple([random.randint(10, 20) for i in range(n)])
+            tup = tuple(random.randint(0, n) for i in range(n))
+            vals = tuple(random.randint(10, 20) for i in range(n))
             idxs = list(range(len(vals)))
             random.shuffle(idxs)
             idxs = tuple(idxs)
@@ -60,6 +61,7 @@ class TestTupleIntrinsic(TestCase):
 class TestNdarrayIntrinsic(TestCase):
     """Tests for numba.unsafe.ndarray
     """
+
     def test_to_fixed_tuple(self):
         const = 3
 
@@ -129,6 +131,7 @@ class TestNdarrayIntrinsic(TestCase):
 class TestBytesIntrinsic(TestCase):
     """Tests for numba.unsafe.bytes
     """
+
     def test_memcpy_region(self):
         @njit
         def foo(dst, dst_index, src, src_index, nbytes):
@@ -216,7 +219,7 @@ class TestZeroCounts(TestCase):
             with self.assertRaises((TypingError, TypeError)) as e:
                 cfunc(*args)
             self.assertIn(
-                "{}() ".format(func_name),
+                f"{func_name}() ",
                 str(e.exception)
             )
 

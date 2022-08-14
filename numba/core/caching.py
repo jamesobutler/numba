@@ -152,7 +152,7 @@ class _CacheLocator(metaclass=ABCMeta):
         return '_'.join([parentdir, hashed])
 
 
-class _SourceFileBackedLocatorMixin(object):
+class _SourceFileBackedLocatorMixin:
     """
     A cache locator mixin for functions which are backed by a well-known
     Python source file.
@@ -189,6 +189,7 @@ class _UserProvidedCacheLocator(_SourceFileBackedLocatorMixin, _CacheLocator):
     A locator that always point to the user provided directory in
     `numba.config.CACHE_DIR`
     """
+
     def __init__(self, py_func, py_file):
         self._py_file = py_file
         self._lineno = py_func.__code__.co_firstlineno
@@ -202,7 +203,7 @@ class _UserProvidedCacheLocator(_SourceFileBackedLocatorMixin, _CacheLocator):
     def from_function(cls, py_func, py_file):
         if not config.CACHE_DIR:
             return
-        parent = super(_UserProvidedCacheLocator, cls)
+        parent = super()
         return parent.from_function(py_func, py_file)
 
 
@@ -215,7 +216,8 @@ class _InTreeCacheLocator(_SourceFileBackedLocatorMixin, _CacheLocator):
     def __init__(self, py_func, py_file):
         self._py_file = py_file
         self._lineno = py_func.__code__.co_firstlineno
-        self._cache_path = os.path.join(os.path.dirname(self._py_file), '__pycache__')
+        self._cache_path = os.path.join(
+            os.path.dirname(self._py_file), '__pycache__')
 
     def get_cache_path(self):
         return self._cache_path
@@ -341,7 +343,7 @@ class CacheImpl(metaclass=ABCMeta):
         # foo/__init__.py and foo/foo.py
         filename = inspect.getfile(py_func)
         modname = os.path.splitext(os.path.basename(filename))[0]
-        fullname = "%s.%s" % (modname, qualname)
+        fullname = f"{modname}.{qualname}"
         abiflags = getattr(sys, 'abiflags', '')
         self._filename_base = self.get_filename_base(fullname, abiflags)
 
@@ -439,20 +441,21 @@ class CodeLibraryCacheImpl(CacheImpl):
         return not codelib.has_dynamic_globals
 
     def get_filename_base(self, fullname, abiflags):
-        parent = super(CodeLibraryCacheImpl, self)
+        parent = super()
         res = parent.get_filename_base(fullname, abiflags)
         return '-'.join([self._filename_prefix, res])
 
 
-class IndexDataCacheFile(object):
+class IndexDataCacheFile:
     """
     Implements the logic for the index file and data file used by a cache.
     """
+
     def __init__(self, cache_path, filename_base, source_stamp):
         self._cache_path = cache_path
-        self._index_name = '%s.nbi' % (filename_base,)
+        self._index_name = f'{filename_base}.nbi'
         self._index_path = os.path.join(self._cache_path, self._index_name)
-        self._data_name_pattern = '%s.{number:d}.nbc' % (filename_base,)
+        self._data_name_pattern = f'{filename_base}.{{number:d}}.nbc'
         self._source_stamp = source_stamp
         self._version = numba.__version__
 
@@ -556,7 +559,7 @@ class IndexDataCacheFile(object):
         uuid4 is used to try and avoid name collisions on a shared filesystem.
         """
         uid = uuid.uuid4().hex[:16]  # avoid long paths
-        tmpname = '%s.tmp.%s' % (filepath, uid)
+        tmpname = f'{filepath}.tmp.{uid}'
         try:
             with open(tmpname, "wb") as f:
                 yield f
@@ -609,7 +612,7 @@ class Cache(_Cache):
         self.enable()
 
     def __repr__(self):
-        return "<%s py_func=%r>" % (self.__class__.__name__, self._name)
+        return f"<{self.__class__.__name__} py_func={self._name!r}>"
 
     @property
     def cache_path(self):
@@ -684,7 +687,7 @@ class Cache(_Cache):
         """
         codebytes = self._py_func.__code__.co_code
         if self._py_func.__closure__ is not None:
-            cvars = tuple([x.cell_contents for x in self._py_func.__closure__])
+            cvars = tuple(x.cell_contents for x in self._py_func.__closure__)
             # Note: cloudpickle serializes a function differently depending
             #       on how the process is launched; e.g. multiprocessing.Process
             cvarbytes = dumps(cvars)
@@ -704,7 +707,7 @@ class FunctionCache(Cache):
 
 
 # Remember used cache filename prefixes.
-_lib_cache_prefixes = set([''])
+_lib_cache_prefixes = {''}
 
 
 def make_library_cache(prefix):
@@ -728,4 +731,3 @@ def make_library_cache(prefix):
         _impl_class = CustomCodeLibraryCacheImpl
 
     return LibraryCache
-

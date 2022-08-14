@@ -26,7 +26,8 @@ class TestUsecases(TestCase):
         ys = -1, 0, 1, 9, 10, 11
 
         for args in itertools.product(xs, ys):
-            self.assertEqual(pyfunc(*args), cfunc(*args), "args %s" % (args,))
+            self.assertEqual(pyfunc(*args), cfunc(*args),
+                             f"args {args}")
 
     def test_sum1d(self):
         pyfunc = usecases.sum1d
@@ -189,25 +190,25 @@ class TestUsecases(TestCase):
         test_str2 = '123'
         op = operator.eq
         self.assertEqual(pyfunc(test_str1, test_str2, op),
-            cfunc(test_str1, test_str2, op))
+                         cfunc(test_str1, test_str2, op))
 
         test_str1 = '123'
         test_str2 = '456'
         op = operator.eq
         self.assertEqual(pyfunc(test_str1, test_str2, op),
-            cfunc(test_str1, test_str2, op))
+                         cfunc(test_str1, test_str2, op))
 
         test_str1 = '123'
         test_str2 = '123'
         op = operator.ne
         self.assertEqual(pyfunc(test_str1, test_str2, op),
-            cfunc(test_str1, test_str2, op))
+                         cfunc(test_str1, test_str2, op))
 
         test_str1 = '123'
         test_str2 = '456'
         op = operator.ne
         self.assertEqual(pyfunc(test_str1, test_str2, op),
-            cfunc(test_str1, test_str2, op))
+                         cfunc(test_str1, test_str2, op))
 
     def test_blackscholes_cnd(self):
         pyfunc = usecases.blackscholes_cnd

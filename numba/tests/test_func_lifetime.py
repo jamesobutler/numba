@@ -7,7 +7,7 @@ from numba.tests.support import TestCase
 import unittest
 
 
-class Dummy(object):
+class Dummy:
 
     def __add__(self, other):
         return other + 5
@@ -15,6 +15,7 @@ class Dummy(object):
 
 def global_usecase1(x):
     return x + 1
+
 
 def global_usecase2():
     return global_obj + 1

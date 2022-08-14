@@ -11,18 +11,22 @@ logger.setLevel(logging.INFO)
 orig_trace = tracing.trace
 tracing.trace = tracing.dotrace
 
+
 class CapturedTrace:
     """Capture the trace temporarily for validation."""
 
     def __init__(self):
         self.buffer = StringIO()
         self.handler = logging.StreamHandler(self.buffer)
+
     def __enter__(self):
         self._handlers = logger.handlers
         self.buffer = StringIO()
         logger.handlers = [logging.StreamHandler(self.buffer)]
+
     def __exit__(self, type, value, traceback):
         logger.handlers = self._handlers
+
     def getvalue(self):
 
         # Depending on how the tests are run, object names may be
@@ -32,7 +36,8 @@ class CapturedTrace:
         log = log.replace(__name__ + '.','')
         return log
 
-class Class(object):
+
+class Class:
 
     @tracing.trace
     @classmethod
@@ -53,7 +58,7 @@ class Class(object):
         self.__test = value
 
     test = tracing.trace(property(_test_get, _test_set))
-        
+
     @tracing.trace
     def method(self, some, other='value', *args, **kwds):
         pass
@@ -62,7 +67,8 @@ class Class(object):
         """Generate a deterministic string for testing."""
         return '<Class instance>'
 
-class Class2(object):
+
+class Class2:
     @classmethod
     def class_method(cls):
         pass
@@ -72,9 +78,11 @@ class Class2(object):
         pass
 
     __test = None
+
     @property
     def test(self):
         return self.__test
+
     @test.setter
     def test(self, value):
         self.__test = value
@@ -91,23 +99,26 @@ class Class2(object):
 
 
 @tracing.trace
-def test(x, y, z = True):
+def test(x, y, z=True):
     a = x + y
     b = x * y
-    if z: return a
-    else: return b
+    if z:
+        return a
+    else:
+        return b
+
 
 class TestTracing(unittest.TestCase):
 
     def __init__(self, *args):
-        super(TestTracing, self).__init__(*args)
+        super().__init__(*args)
 
     def setUp(self):
         self.capture = CapturedTrace()
 
     def tearDown(self):
         del self.capture
-        
+
     def test_method(self):
 
         with self.capture:
@@ -131,7 +142,6 @@ class TestTracing(unittest.TestCase):
         self.assertEqual(self.capture.getvalue(),
                          ">> static_method()\n" +
                          "<< static_method\n")
-
 
     def test_property(self):
 
@@ -169,12 +179,12 @@ class TestTracing(unittest.TestCase):
             test.method()
 
             self.assertEqual(self.capture.getvalue(),
-                         ">> Class2.class_method(cls=<type 'Class2'>)\n" +
-                         "<< Class2.class_method\n"
-                         ">> static_method()\n"
-                         "<< static_method\n")
+                             ">> Class2.class_method(cls=<type 'Class2'>)\n" +
+                             "<< Class2.class_method\n"
+                             ">> static_method()\n"
+                             "<< static_method\n")
 
-            
+
 # Reset tracing to its original value
 tracing.trace = orig_trace
 
