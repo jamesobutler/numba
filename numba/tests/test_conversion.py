@@ -110,9 +110,9 @@ class TestConversion(TestCase):
             self.assertEqual(pyfunc(xs, ys), cfunc(xs, ys))
 
     # test when a function parameters are jitted as unsigned types
-    # the function is called with negative parameters the Python error 
+    # the function is called with negative parameters the Python error
     # that it generates is correctly handled -- a Python error is returned to the user
-    # For more info, see the comment in Include/longobject.h for _PyArray_AsByteArray 
+    # For more info, see the comment in Include/longobject.h for _PyArray_AsByteArray
     # which PyLong_AsUnsignedLongLong calls
     def test_negative_to_unsigned(self):
         def f(x):
@@ -121,8 +121,8 @@ class TestConversion(TestCase):
             jit('uintp(uintp)', nopython=True)(f)(-5)
 
     # test the switch logic in callwraper.py:build_wrapper() works for more than one argument
-    # and where the error occurs 
-    def test_multiple_args_negative_to_unsigned(self): 
+    # and where the error occurs
+    def test_multiple_args_negative_to_unsigned(self):
         pyfunc = foobar
         cres = compile_isolated(pyfunc, [types.uint64, types.uint64, types.uint64],
                                 return_type=types.uint64)
@@ -133,7 +133,7 @@ class TestConversion(TestCase):
                 cfunc(a, b, c)
 
     # test switch logic of callwraper.py:build_wrapper() with records as function parameters
-    def test_multiple_args_records(self): 
+    def test_multiple_args_records(self):
         pyfunc = foobar
 
         mystruct_dt = np.dtype([('p', np.float64),
@@ -164,7 +164,7 @@ class TestConversion(TestCase):
     # test switch logic of callwraper.py:build_wrapper() with no function parameters
     def test_with_no_parameters(self):
         def f():
-            pass 
+            pass
         self.assertEqual(f(), jit('()', nopython=True)(f)())
 
     def check_argument_cleanup(self, typ, obj):
