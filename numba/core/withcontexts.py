@@ -507,8 +507,8 @@ class _ParallelChunksize(WithContext):
         restore_spc_call = ir.Expr.call(spcvar, [orig_pc_var], (), loc)
         restore_state.append(ir.Assign(restore_spc_call, orig_pc_var, loc))
 
-        blocks[blk_start].body = (blocks[blk_start].body[1:-1] + 
-                                  set_state + 
+        blocks[blk_start].body = (blocks[blk_start].body[1:-1] +
+                                  set_state +
                                   [blocks[blk_start].body[-1]])
         blocks[blk_end].body = restore_state + blocks[blk_end].body
         func_ir._definitions = build_definitions(blocks)

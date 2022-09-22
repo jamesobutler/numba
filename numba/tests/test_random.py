@@ -1529,7 +1529,7 @@ class TestRandomDirichlet(BaseTest):
         with self.assertRaises(ValueError) as raises:
             cfunc(alpha, 1)
         self.assertIn("dirichlet: alpha must be > 0.0", str(raises.exception))
-        
+
         alpha = self.alpha
         sizes = (True, 3j, 1.5, (1.5, 1), (3j, 1), (3j, 3j), (np.int8(3), np.int64(7)))
         for size in sizes:
@@ -1549,7 +1549,7 @@ class TestRandomNoncentralChiSquare(BaseTest):
         if size is not None:
             self.assertIsInstance(sample, np.ndarray)
             self.assertEqual(sample.dtype, np.float64)
-            
+
             if isinstance(size, int):
                 self.assertEqual(sample.shape, (size,))
             else:
@@ -1606,11 +1606,11 @@ class TestRandomNoncentralChiSquare(BaseTest):
         with self.assertRaises(ValueError) as raises:
             cfunc(df, nonc, 1)
         self.assertIn("df <= 0", str(raises.exception))
-        
+
         df, nonc = 1, -1
         with self.assertRaises(ValueError) as raises:
             cfunc(df, nonc, 1)
-        self.assertIn("nonc < 0", str(raises.exception))        
+        self.assertIn("nonc < 0", str(raises.exception))
 
         df, nonc = 1, 1
         sizes = (True, 3j, 1.5, (1.5, 1), (3j, 1), (3j, 3j), (np.int8(3), np.int64(7)))
