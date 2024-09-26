@@ -1132,7 +1132,7 @@ def dprint_func_ir(func_ir, title, blocks=None):
     """
     if config.DEBUG_ARRAY_OPT >= 1:
         ir_blocks = func_ir.blocks
-        func_ir.blocks = ir_blocks if blocks == None else blocks
+        func_ir.blocks = ir_blocks if blocks is None else blocks
         name = func_ir.func_id.func_qualname
         print(("IR %s: %s" % (title, name)).center(80, "-"))
         func_ir.dump()
@@ -1472,7 +1472,7 @@ def restore_copy_var_names(blocks, save_copies, typemap):
         # already renamed
         if (not a.startswith('$') and b.name.startswith('$')
                                                 and b.name not in rename_dict):
-            new_name = mk_unique_var('${}'.format(a));
+            new_name = mk_unique_var('${}'.format(a))
             rename_dict[b.name] = new_name
             var_rename_map[new_name] = a
             typ = typemap.pop(b.name)
